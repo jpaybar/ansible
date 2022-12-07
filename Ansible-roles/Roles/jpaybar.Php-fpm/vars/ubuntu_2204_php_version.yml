@@ -1,0 +1,4 @@
+---
+# vars file for jpaybar.Php-fpm
+
+php_version: "8.1"

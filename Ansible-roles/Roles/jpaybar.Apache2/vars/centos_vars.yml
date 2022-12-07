@@ -1,0 +1,14 @@
+---
+# vars file for jpaybar.Apache2
+
+apache:
+  #listen:
+    #- http: 80
+    #- https: 443
+  certLocation: "/etc/pki/tls/certs/myapacheserver.crt"
+  certKeyLocation: "/etc/pki/tls/private/myapacheserver.key"
+
+install_packages:
+  - httpd
+  - mod_ssl
+  

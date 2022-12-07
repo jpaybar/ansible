@@ -1,0 +1,12 @@
+<VirtualHost *:80>
+    ServerAdmin jpaybar@jpaybar.local
+    ServerName {{ vhost.serverName }}
+    ServerAlias www.{{ vhost.serverName }}
+    DocumentRoot {{ vhost.documentRoot }}
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+	
+	#Redirect "/" "https://{{ vhost.ip }}/"
+	Redirect "/" "https://localhost/"
+	
+</VirtualHost>

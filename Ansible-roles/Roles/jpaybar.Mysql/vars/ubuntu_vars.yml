@@ -1,0 +1,9 @@
+---
+# vars file for jpaybar.Mysql
+
+mysql_daemon: mysql
+mysql_packages:
+- mysql-common
+- mysql-server
+- python3-pip
+mysql_config_file: /etc/mysql/mysql.conf.d/mysqld.cnf

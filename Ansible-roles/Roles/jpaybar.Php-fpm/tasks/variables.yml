@@ -1,0 +1,34 @@
+---
+# vars file for jpaybar.Php-fpm
+
+#=========================== OS VARIABLES ================================
+- name: Include OS-specific variables
+  include_vars: "{{ item }}"
+  with_items:
+    - "{{ ansible_distribution }}_vars.yml"
+    #- "{{ ansible_distribution }}_config.yml"
+#=========================================================================
+
+#======================= PHP VERSIONS FOR UBUNTU =========================
+- name: Include PHP version for Ubuntu 18.04
+  include_vars: ubuntu_1804_php_version.yml
+  when: ansible_distribution_version == "18.04"
+ 
+- name: Include PHP version for Ubuntu 20.04
+  include_vars: ubuntu_2004_php_version.yml
+  when: ansible_distribution_version == "20.04"
+  
+- name: Include PHP version for Ubuntu 22.04
+  include_vars: ubuntu_2204_php_version.yml
+  when: ansible_distribution_version == "22.04"
+#=========================================================================
+
+#======================= PHP VERSIONS FOR DEBIAN ========================= 
+- name: Include PHP version for Debian 10
+  include_vars: debian_10_php_version.yml
+  when: ansible_distribution_major_version == "10"
+  
+- name: Include PHP version for Debian 11
+  include_vars: debian_11_php_version.yml
+  when: ansible_distribution_major_version == "11"
+#=========================================================================

@@ -1,0 +1,44 @@
+---
+# vars file for jpaybar.Mysql
+
+#============================== OS VARIABLES ====================================
+- name: Include OS-specific variables
+  include_vars: "{{ item }}"
+  with_items:
+    - "{{ ansible_distribution }}_vars.yml"
+    #- "{{ ansible_distribution }}_config.yml"
+#================================================================================
+
+#======================= mysqld.cnf VERSIONS FOR UBUNTU =========================
+- name: Include mysqld.cnf version for Ubuntu 18.04
+  include_vars: ubuntu_1804_mysqld.cnf_version.yml
+  when: ansible_distribution_version == "18.04"
+ 
+- name: Include mysqld.cnf version for Ubuntu 20.04
+  include_vars: ubuntu_2004_mysqld.cnf_version.yml
+  when: ansible_distribution_version == "20.04"
+  
+- name: Include mysqld.cnf version for Ubuntu 22.04
+  include_vars: ubuntu_2204_mysqld.cnf_version.yml
+  when: ansible_distribution_version == "22.04"
+#================================================================================
+
+#======================= mysqld.cnf VERSIONS FOR DEBIAN ========================= 
+- name: Include mysqld.cnf version for Debian 10
+  include_vars: debian_10_mysqld.cnf_version.yml
+  when: ansible_distribution_major_version == "10"
+  
+- name: Include mysqld.cnf version for Debian 11
+  include_vars: debian_11_mysqld.cnf_version.yml
+  when: ansible_distribution_major_version == "11"
+#================================================================================
+
+#========================= my.cnf VERSIONS FOR CENTOS ===========================
+- name: Include my.cnf version for Centos 7.9
+  include_vars: centos_79_my.cnf_version.yml
+  when: ansible_distribution_version == "7.9"
+  
+- name: Include my.cnf version for Centos 8.5
+  include_vars: centos_85_my.cnf_version.yml
+  when: ansible_distribution_version == "8.5"
+#================================================================================

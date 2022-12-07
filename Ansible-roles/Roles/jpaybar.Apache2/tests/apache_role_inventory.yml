@@ -1,0 +1,47 @@
+##########################################################################
+# Example Inventory
+##########################################################################
+#
+# https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+#
+##########################################################################
+
+all:
+  children:
+    apache2webserver: 
+      vars: 
+        ansible_python_interpreter: "/usr/bin/python3"        
+      children: 
+        ubuntu:
+          hosts:
+            ubuntu2204: # Jammy Jellyfish
+              ansible_host: 192.168.10.50
+            ubuntu2004: # Focal Fossa
+              ansible_host: 192.168.10.51
+            ubuntu1804: # Bionic Beaver
+              ansible_host: 192.168.10.52
+        debian:
+          hosts:
+            debian11: # Bullseye
+              ansible_host: 192.168.10.60
+            debian10: # Buster
+              ansible_host: 192.168.10.61
+        centos:
+          #vars: 
+            #ansible_python_interpreter: "/usr/bin/python3"
+          hosts:
+            centos79: # Centos 7.9
+              ansible_host: 192.168.10.71
+              ansible_python_interpreter: "/usr/bin/python2"
+            centos85: # Centos 8.5
+              ansible_host: 192.168.10.70
+              #ansible_python_interpreter: "/usr/bin/python2"
+              #ansible_user: 
+              #ansible_ssh_private_key_file:
+         
+ 
+        
+   
+           
+
+                          

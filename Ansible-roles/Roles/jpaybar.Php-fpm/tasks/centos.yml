@@ -1,0 +1,9 @@
+---
+# tasks file for jpaybar.Php-fpm
+
+- name: Install PHP packages 
+  yum:
+    name: "{{ php_vars.packages }}"
+    state: "{{ php_defaults.packages_state }}"
+  notify: restart webserver
+  tags: Install_PHP_packages

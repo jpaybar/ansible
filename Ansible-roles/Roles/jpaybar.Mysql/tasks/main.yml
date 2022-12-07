@@ -1,0 +1,51 @@
+---
+# tasks file for jpaybar.Mysql
+
+#############################################################################################################################
+# Getting information about useful variables on remote hosts:
+#
+# ansible all -i "inventory.yml" -l "select_from_inventory" -m "setup" -u "user" -k "ssh_passwd" | grep "ansible_distribution"
+#
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/setup_module.html
+#############################################################################################################################
+
+##==========================##
+## Variables configuration  ##
+##=========================================================================================================================##
+- name: Variables files
+  include_tasks: variables.yml
+##=========================================================================================================================##
+
+##==========================##
+## Setup/Install tasks      ##
+##=========================================================================================================================##
+- name: Install MySQL if Ubuntu distribution
+  include_tasks: ubuntu.yml
+  when: (ansible_distribution == "Ubuntu" and ansible_distribution_version == "18.04") or
+        (ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04") or
+        (ansible_distribution == "Ubuntu" and ansible_distribution_version == "22.04")
+  
+- name: Install MySQL if Debian distribution
+  include_tasks: debian.yml
+  when: (ansible_distribution == "Debian" and ansible_distribution_major_version == "10") or
+        (ansible_distribution == "Debian" and ansible_distribution_major_version == "11")
+        
+- name: Install MySQL if CentOS distribution
+  include_tasks: centos.yml
+  when: (ansible_distribution == "CentOS" and ansible_distribution_version == "7.9") or
+        (ansible_distribution == "CentOS" and ansible_distribution_version == "8.5")       
+##=========================================================================================================================##        
+
+##==========================##
+## MySQL users              ##
+##=========================================================================================================================##
+- name: MySQL users
+  include_tasks: users.yml
+##=========================================================================================================================##
+
+##==========================##
+## Databases                ##
+##=========================================================================================================================##
+- name: Create databases
+  include_tasks: databases.yml
+##=========================================================================================================================##

@@ -1,0 +1,32 @@
+---
+# tasks file for jpaybar.Php-fpm
+
+##==========================##
+## Variables configuration. ##
+##=========================================================================================================================##
+- name: Variables files
+  include_tasks: variables.yml
+##=========================================================================================================================##
+
+##==========================##
+## Setup/Install tasks      ##
+##=========================================================================================================================##
+- name: Install php-fmp if Ubuntu distribution
+  include_tasks: ubuntu.yml
+  when: (ansible_distribution == "Ubuntu" and ansible_distribution_version == "18.04") or
+        (ansible_distribution == "Ubuntu" and ansible_distribution_version == "20.04") or
+        (ansible_distribution == "Ubuntu" and ansible_distribution_version == "22.04")
+  
+- name: Install php-fmp if Debian distribution
+  include_tasks: debian.yml
+  when: (ansible_distribution == "Debian" and ansible_distribution_major_version == "10") or
+        (ansible_distribution == "Debian" and ansible_distribution_major_version == "11")
+        
+- name: Install php-fmp if CentOS distribution
+  include_tasks: centos.yml
+  when: (ansible_distribution == "CentOS" and ansible_distribution_version == "7.9") or
+        (ansible_distribution == "CentOS" and ansible_distribution_version == "8.5")       
+##=========================================================================================================================##  
+
+
+

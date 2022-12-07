@@ -1,0 +1,42 @@
+---
+# tasks file for jpaybar.Apache2
+
+############################################# APACHE SETUP ######################################################
+- name: Install Apache and modules
+  yum: name={{ item }} state=latest
+  loop: ['{{ install_packages }}']
+  tags: Install_apache
+#################################################################################################################
+
+##################################### SELF-SIGNED SSL CERT SETUP ################################################  
+- name: Copy SSL certificate files
+  copy: src={{ item.src }} dest={{ item.dest }} mode={{ item.mode }} owner={{ item.owner }} group={{ item.group }} 
+  with_items:
+    - { src: "myapacheserver.crt", dest: "{{ apache.certLocation }}", mode: "0644", owner: "root", group: "root" }
+    - { src: "myapacheserver.key", dest: "{{ apache.certKeyLocation }}", mode: "0600", owner: "root", group: "root" }
+  tags: Copy_certfiles
+#################################################################################################################
+
+############################################## VHOSTS SETUP #####################################################    
+- name: Create website folder
+  file:
+    path: "{{ vhost.documentRoot }}"
+    state: directory
+  tags: Website_folder
+  
+- name: Copy info.php file
+  copy:
+    src: "info.php"
+    dest: "{{ vhost.documentRoot }}"
+  tags: Copy_info.php
+  
+#======= The SSL parameters are included in the VirtualHost definition file and not in a separate file. ========#  
+- name: Apply templates
+  template: src={{ item.src }} dest={{ item.dest }} #mode={{ item.mode }}
+  with_items:
+    - { src: "ssl-vhost-centos.conf.j2", dest: "/etc/httpd/conf.d/ssl-{{ vhost.serverName }}-centos.conf" }
+    - { src: "index.html.j2", dest: "{{ vhost.documentRoot }}/index.html" }
+  notify: Reload Httpd
+  tags: Apply_templates
+#===============================================================================================================#
+#################################################################################################################

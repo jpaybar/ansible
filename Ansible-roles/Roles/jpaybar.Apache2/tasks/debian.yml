@@ -1,0 +1,82 @@
+---
+# tasks file for jpaybar.Apache2
+
+############################################# APACHE SETUP ######################################################
+- name: Install prerequisites
+  apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
+  loop: [ 'aptitude' ]
+  tags: Install_prerequisites
+  
+- name: Install Apache
+  apt: name={{ item }} state=latest
+  loop: ['{{ install_packages }}']
+  tags: Install_apache
+#################################################################################################################
+
+##################################### SELF-SIGNED SSL CERT SETUP ################################################  
+- name: Copy SSL certificate files
+  copy: src={{ item.src }} dest={{ item.dest }} mode={{ item.mode }} owner={{ item.owner }} group={{ item.group }} 
+  with_items:
+    - { src: "myapacheserver.crt", dest: "{{ apache.certLocation }}", mode: "0644", owner: "root", group: "root" }
+    - { src: "myapacheserver.key", dest: "{{ apache.certKeyLocation }}", mode: "0640", owner: "root", group: "ssl-cert" }
+  tags: Copy_certfiles
+  
+- name: Copy SSL Parameter File
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items: 
+    - { src: "ssl-params.conf", dest: "/etc/apache2/conf-available/ssl-params.conf"}
+  tags: Copy_SSL_parameterFile
+#################################################################################################################
+
+###################################### ENABLE APACHE MODS AND SSL CONF FILE #####################################
+- name: Enable Apache mods
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - "{{ apache_mods }}"
+  notify: Reload Apache
+  tags: A2enmod_modules
+  
+- name: Enable SSL parameters file
+  command: /usr/sbin/a2enconf ssl-params
+  notify: Reload Apache
+  tags: Enable_SSL_parameterFile
+#################################################################################################################
+
+############################################## VHOSTS SETUP #####################################################    
+- name: Create website folder
+  file:
+    path: "{{ vhost.documentRoot }}"
+    state: directory
+  tags: Website_folder
+  
+- name: Copy info.php file
+  copy:
+    src: "info.php"
+    dest: "{{ vhost.documentRoot }}"
+  tags: Copy_info.php
+
+- name: Apply templates
+  template: src={{ item.src }} dest={{ item.dest }} #mode={{ item.mode }}
+  with_items:
+    - { src: "vhost.conf.j2", dest: "/etc/apache2/sites-available/{{ vhost.serverName }}.conf" }
+    - { src: "ssl-vhost.conf.j2", dest: "/etc/apache2/sites-available/ssl-{{ vhost.serverName }}.conf" }
+    - { src: "index.html.j2", dest: "{{ vhost.documentRoot }}/index.html" }
+  tags: Apply_templates
+  
+- name: Enable vhost
+  command: /usr/sbin/a2ensite {{ vhost.serverName }}
+  notify: Reload Apache
+  tags: Enable_vhost
+  
+- name: Enable ssl-vhost
+  command: /usr/sbin/a2ensite ssl-{{ vhost.serverName }}
+  notify: Reload Apache
+  tags: Enable_ssl-vhost
+  
+- name: Disable default Apache site
+  command: /usr/sbin/a2dissite 000-default.conf
+  notify: Reload Apache  
+  tags: A2dissite_default
+#################################################################################################################

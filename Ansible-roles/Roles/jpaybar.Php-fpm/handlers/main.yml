@@ -1,0 +1,15 @@
+---
+# handlers file for jpaybar.Php-fpm
+
+- name: restart webserver
+  service:
+    name: "{{ php_vars.webserver_daemon }}"
+    state: restarted
+  notify: restart php-fpm
+  when: php_defaults.running_webserver
+
+- name: restart php-fpm
+  service:
+    name: "{{ php_vars.fpm_daemon }}"
+    state: restarted
+

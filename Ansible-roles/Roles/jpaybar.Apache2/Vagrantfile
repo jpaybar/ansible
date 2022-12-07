@@ -1,0 +1,111 @@
+# -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+	config.proxy.http     = "http://yourproxy:8080"
+	config.proxy.https    = "http://yourproxy:8080"
+	config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+  
+################################# UBUNTU #######################################
+  # config.vm.define "ubuntu1804" do |ubuntu1804|
+    # ubuntu1804.vm.box = "ubuntu1804"
+    # ubuntu1804.vm.hostname = 'ubuntu1804'
+    # ubuntu1804.vm.network :private_network, ip: "192.168.10.52"
+    # ubuntu1804.vm.network :forwarded_port, guest: 22, host: 22052, id: "ssh"
+	# ubuntu1804.vm.network :forwarded_port, guest: 80, host: 8052, id: "http"
+	# ubuntu1804.vm.network :forwarded_port, guest: 443, host: 44352, id: "https"
+	# ubuntu1804.vm.synced_folder ".", "/vagrant", disabled: true
+	# ubuntu1804.vbguest.auto_update = false
+    # # ubuntu1804.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  # config.vm.define "ubuntu2004" do |ubuntu2004|
+    # ubuntu2004.vm.box = "ubuntu2004"
+    # ubuntu2004.vm.hostname = 'ubuntu2004'
+    # ubuntu2004.vm.network :private_network, ip: "192.168.10.51"
+    # ubuntu2004.vm.network :forwarded_port, guest: 22, host: 22051, id: "ssh"
+	# ubuntu2004.vm.network :forwarded_port, guest: 80, host: 8051, id: "http"
+	# ubuntu2004.vm.network :forwarded_port, guest: 443, host: 44351, id: "https"
+	# ubuntu2004.vbguest.auto_update = false
+    # # ubuntu2004.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  # config.vm.define "ubuntu2204" do |ubuntu2204|
+    # ubuntu2204.vm.box = "ubuntu2204"
+    # ubuntu2204.vm.hostname = 'ubuntu2204'
+    # ubuntu2204.vm.network :private_network, ip: "192.168.10.50"
+    # ubuntu2204.vm.network :forwarded_port, guest: 22, host: 22050, id: "ssh"
+	# ubuntu2204.vm.network :forwarded_port, guest: 80, host: 8050, id: "http"
+	# ubuntu2204.vm.network :forwarded_port, guest: 443, host: 44350, id: "https"
+	# ubuntu2204.vbguest.auto_update = false
+    # # ubuntu2204.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+################################################################################
+
+################################# DEBIAN #######################################
+  # config.vm.define "debian10" do |debian10|
+    # debian10.vm.box = "debian10"
+    # debian10.vm.hostname = 'debian10'
+    # debian10.vm.network :private_network, ip: "192.168.10.61"
+    # debian10.vm.network :forwarded_port, guest: 22, host: 22061, id: "ssh"
+	# debian10.vm.network :forwarded_port, guest: 80, host: 8061, id: "http"
+	# debian10.vm.network :forwarded_port, guest: 443, host: 44361, id: "https"
+	# debian10.vm.synced_folder ".", "/vagrant", disabled: true
+	# debian10.vbguest.auto_update = false
+    # # debian10.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  # config.vm.define "debian11" do |debian11|
+    # debian11.vm.box = "debian11"
+    # debian11.vm.hostname = 'debian11'
+    # debian11.vm.network :private_network, ip: "192.168.10.60"
+    # debian11.vm.network :forwarded_port, guest: 22, host: 22060, id: "ssh"
+	# debian11.vm.network :forwarded_port, guest: 80, host: 8060, id: "http"
+	# debian11.vm.network :forwarded_port, guest: 443, host: 44360, id: "https"
+	# debian11.vm.synced_folder ".", "/vagrant", disabled: true
+	# debian11.vbguest.auto_update = false
+    # # debian11.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+################################################################################
+
+################################# CENTOS #######################################
+  # config.vm.define "centos79" do |centos79|
+    # centos79.vm.box = "centos79"
+    # centos79.vm.hostname = 'centos79'
+    # centos79.vm.network :private_network, ip: "192.168.10.71"
+    # centos79.vm.network :forwarded_port, guest: 22, host: 22071, id: "ssh"
+	# centos79.vm.network :forwarded_port, guest: 80, host: 8071, id: "http"
+	# centos79.vm.network :forwarded_port, guest: 443, host: 44371, id: "https"
+	# centos79.vm.synced_folder ".", "/vagrant", disabled: true
+	# centos79.vbguest.auto_update = false
+    # # centos79.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  config.vm.define "centos85" do |centos85|
+    centos85.vm.box = "centos85"
+    centos85.vm.hostname = 'centos85'
+    centos85.vm.network :private_network, ip: "192.168.10.70"
+    centos85.vm.network :forwarded_port, guest: 22, host: 22070, id: "ssh"
+	centos85.vm.network :forwarded_port, guest: 80, host: 8070, id: "http"
+	centos85.vm.network :forwarded_port, guest: 443, host: 44370, id: "https"
+	centos85.vm.synced_folder ".", "/vagrant", disabled: true
+	centos85.vbguest.auto_update = false
+    # centos85.vm.provision :ansible do |ansible|
+		# ansible.playbook = "test.yml"
+    # end
+  end
+################################################################################  
+
+end

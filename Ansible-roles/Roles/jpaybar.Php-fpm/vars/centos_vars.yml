@@ -1,0 +1,17 @@
+---
+# vars file for jpaybar.Php-fpm
+
+php_vars:
+  packages:
+    - php
+    - php-cli
+    - php-common
+    - php-devel
+    - php-fpm
+    - php-soap
+    - php-gd
+    - php-pdo
+    - php-xml
+  webserver_daemon: "httpd"
+  fpm_daemon: php-fpm
+

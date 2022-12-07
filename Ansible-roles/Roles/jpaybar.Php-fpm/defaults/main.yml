@@ -1,0 +1,12 @@
+---
+# defaults file for jpaybar.Php-fpm
+
+php_defaults:
+  packages_state: latest
+  install_recommends: yes
+  running_webserver: true
+
+    
+
+
+

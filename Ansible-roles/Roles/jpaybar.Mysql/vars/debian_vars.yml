@@ -1,0 +1,9 @@
+---
+# vars file for jpaybar.Mysql
+
+mysql_daemon: mariadb
+mysql_packages:
+- mariadb-common
+- mariadb-server
+- python3-pip
+mysql_config_file: /etc/mysql/mariadb.conf.d/50-server.cnf

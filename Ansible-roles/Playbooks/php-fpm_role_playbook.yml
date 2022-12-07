@@ -1,0 +1,6 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - ../Roles/jpaybar.Php-fpm
+   

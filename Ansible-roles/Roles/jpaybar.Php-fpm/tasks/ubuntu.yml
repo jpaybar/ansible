@@ -1,0 +1,15 @@
+---
+# tasks file for jpaybar.Php-fpm
+
+- name: Install prerequisites
+  apt: name={{ item }} update_cache=yes cache_valid_time=86400 state=latest force_apt_get=yes
+  loop: [ 'aptitude' ]
+  tags: Install_prerequisites
+
+- name: Install PHP packages 
+  apt:
+    name: "{{ php_vars.packages }}"
+    state: "{{ php_defaults.packages_state }}"
+    install_recommends: "{{ php_defaults.install_recommends }}"
+  notify: restart webserver
+  tags: Install_PHP_packages

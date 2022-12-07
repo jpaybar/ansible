@@ -1,0 +1,18 @@
+---
+# vars file for jpaybar.Php-fpm
+
+php_vars:
+  packages:
+    - "php{{ php_version }}"
+    - "php{{ php_version }}-common"
+    - "php{{ php_version }}-cli"
+    - "php{{ php_version }}-mysql"
+    - "libapache2-mod-php{{ php_version }}"
+    - "php{{ php_version }}-fpm"
+    - "php{{ php_version }}-soap"
+    - "php{{ php_version }}-gd"
+    - "php{{ php_version }}-xml"
+    - "python3-pymysql"
+  webserver_daemon: "apache2"
+  fpm_daemon: "php{{ php_version }}-fpm"
+  
