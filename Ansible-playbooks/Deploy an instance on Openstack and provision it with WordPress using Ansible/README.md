@@ -208,7 +208,7 @@ Once the installation is complete, you will be able to access the initial WordPr
 http://ip
 ```
 
-![wordpress_OK.PNG](https://github.com/jpaybar/Ansible-playbooks/blob/main/Deploy%20an%20instance%20on%20Openstack%20and%20provision%20it%20with%20WordPress%20using%20Ansible/_images/wordpress_OK.PNG)
+![wordpress_OK.PNG](https://github.com/jpaybar/Ansible/blob/main/Ansible-playbooks/Deploy%20an%20instance%20on%20Openstack%20and%20provision%20it%20with%20WordPress%20using%20Ansible/_images/wordpress_OK.PNG)
 
 ## Author Information
 
