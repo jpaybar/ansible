@@ -370,7 +370,7 @@ Ahora podremos acceder a `AWX` escribiendo:
 http://localhost
 ```
 
-![AWX_console.PNG](C:\LABO\vagrant\ANSIBLE\How%20to%20install%20AWX%20with%20Minikube%20on%20Windows%2010\_images\AWX_console.PNG)
+![AWX_console.PNG](https://github.com/jpaybar/Ansible/blob/main/AWX/How%20to%20install%20AWX%20with%20Minikube%20on%20Windows%2010/_images/AWX_console.PNG)
 
 De forma predeterminada, el usuario administrador es `admin` y la contraseña está disponible en `<resourcename>-admin-password`. Para obtener la contraseña de administrador, ejecutaremos:
 
