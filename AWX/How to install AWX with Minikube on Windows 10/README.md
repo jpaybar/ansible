@@ -385,5 +385,7 @@ Dicho comando obtiene la `password` del cluster en `base64`, la decodifica a `UT
 ## Author Information
 
 Juan Manuel Payán Barea    (IT Technician) [st4rt.fr0m.scr4tch@gmail.com](mailto:st4rt.fr0m.scr4tch@gmail.com)
+
 [jpaybar (Juan M. Payán Barea) · GitHub](https://github.com/jpaybar)
+
 https://es.linkedin.com/in/juanmanuelpayan
