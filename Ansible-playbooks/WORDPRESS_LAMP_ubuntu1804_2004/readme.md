@@ -79,7 +79,7 @@ http://localhost
 http://ip
 ```
 
-![wordpress_OK.PNG](https://github.com/jpaybar/Ansible-playbooks/blob/main/WORDPRESS_LAMP_ubuntu1804_2004/_images/wordpress_OK.PNG)
+![wordpress_OK.PNG](https://github.com/jpaybar/Ansible/blob/main/Ansible-playbooks/WORDPRESS_LAMP_ubuntu1804_2004/_images/wordpress_OK.PNG)
 
 
 
