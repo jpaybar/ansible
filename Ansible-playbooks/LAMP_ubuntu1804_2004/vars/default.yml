@@ -1,0 +1,7 @@
+---
+mysql_root_password: "vagrant"
+app_user: "vagrant"
+http_host: "lampserver"
+http_conf: "lampserver.conf"
+http_port: "80"
+disable_default: true

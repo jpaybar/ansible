@@ -1,0 +1,36 @@
+---
+- name: Install and configure Bind9
+  hosts: dnsservers
+  become: true
+  tasks:
+  - name: Install Bind9 to the latest version
+    apt: 
+      name: bind9 
+      state: latest
+
+  - name: Configure named.conf.local
+    copy: 
+      src: "files/named.conf.local"
+      dest: "/etc/bind/named.conf.local"
+    notify:
+      - Restart bind
+      
+  - name: Set zone file mydomain.com
+    copy: 
+      src: "files/db.mydomain.com"
+      dest: "/var/cache/bind/db.mydomain.com"
+    notify:
+      - Restart bind
+      
+  - name: Set zone file 192.168.10.0/24
+    copy: 
+      src: "files/db.192.168.10"
+      dest: "/var/cache/bind/db.192.168.10"
+    notify:
+      - Restart bind
+      
+  handlers:
+    - name: Restart bind
+      service: 
+        name: bind9 
+        state: restarted

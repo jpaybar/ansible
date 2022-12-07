@@ -1,0 +1,9 @@
+---
+create_containers: 1
+container_name: alpine
+container_image: alpine
+container_command: top
+
+http_proxy: "http://yourproxy.com:8080"
+https_proxy: "http://yourproxy.com:8080"
+no_proxy: "localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.39.0/24,192.168.49.0/24"

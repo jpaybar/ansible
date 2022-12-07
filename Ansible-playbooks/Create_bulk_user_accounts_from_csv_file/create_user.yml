@@ -1,0 +1,70 @@
+######################################################################################
+# This playbook creates users in bulk from a .csv file, creates the "wheel" group
+# for those users and gives them "sudo" permission. The generic password is read 
+# from a file encrypted with "ansible-vault", users will have to change the password 
+# the first time they log in to the system.
+# Link:
+# https://www.redhat.com/sysadmin/ansible-create-users-csv
+######################################################################################
+---
+- name: Create users from csv file
+  hosts: all
+  become: true
+  vars_files:
+    - vars/variables.yml
+    - vars/password.yml
+  tasks:
+  
+######################### Get the information from the CSV file ######################
+   # https://docs.ansible.com/ansible/latest/collections/community/general/read_csv_module.html
+   - name: Read the csv file
+     read_csv:
+       path: csv/username.csv
+     register: user_list
+     delegate_to: localhost
+   
+   # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/debug_module.html
+   - name: Display user_list data
+     debug:
+       msg: "{{ user_list.list }}"
+      
+   - name: Extract Username from all dictionaries
+     debug:
+       msg: "{{ item.Username }}"
+     loop: "{{ user_list.list }}"
+######################################################################################
+
+################ Create the group "wheel" and give permissions "sudo" ################
+   - name: Create "wheel" group
+     group:
+       name: "{{ group }}"
+       state: present
+       
+   - name: Enable sudo for the "wheel" group
+     template:
+       src: "files/sudoers_wheel.j2"
+       dest: "/etc/sudoers.d/sudoers_wheel"
+######################################################################################
+      
+############## Create users and force them to change their password ##################
+   - name: Create users 
+     user:
+       name: "{{ item.Username }}"
+       uid: "{{ item.UID }}"
+       groups: "{{ item.Groups }}"
+       append: true
+       create_home: yes
+       shell: /bin/bash
+       password: "{{ password | password_hash('sha512') }}"
+       comment: "{{ item.First_name }} {{ item.Last_name }}"
+       state: present
+     loop: "{{ user_list.list }}"
+     register: user_status
+     
+   - name: Force password change on first login
+     command: chage -d 0 "{{ item.Username }}"
+     with_items:
+       - "{{ user_list.list }}"
+     when: user_status.changed
+######################################################################################
+     

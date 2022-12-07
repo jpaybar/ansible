@@ -1,0 +1,75 @@
+# -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+boxes = [
+    {
+        :name => "dns",
+        :eth1 => "192.168.10.50",
+        :mem => "512",
+        :cpu => "1",
+		:box => "ubuntu2004",
+		:sshport => "2250",
+		:httpport => "8050",
+		:group => "/dnsservers"
+    },
+    {
+        :name => "node1",
+        :eth1 => "192.168.10.51",
+        :mem => "512",
+        :cpu => "1",
+		:box => "ubuntu2004",
+		:sshport => "2251",
+		:httpport => "8051",
+		:group => "/webservers"
+    },
+	{
+        :name => "node2",
+        :eth1 => "192.168.10.52",
+        :mem => "512",
+        :cpu => "1",
+		:box => "ubuntu2004",
+		:sshport => "2252",
+		:httpport => "8052",
+		:group => "/webservers"
+    }
+]
+
+Vagrant.configure(2) do |config|
+
+	# Desactivar sincronización de la carpeta raiz.
+	#config.vm.synced_folder ".", "/vagrant", id: "vagrant-root", disabled: true
+	
+	boxes.each do |opts|
+		config.ssh.insert_key = false
+		config.vm.define opts[:name] do |subconfig|
+			subconfig.vm.box = opts[:box]
+			subconfig.vm.hostname = opts[:name]
+			subconfig.vm.network "private_network", ip: opts[:eth1]
+			subconfig.vm.network "forwarded_port", guest: 22, host: opts[:sshport], id: "ssh"
+			if opts[:name] == 'node1' || 'node2'
+				subconfig.vm.network "forwarded_port", guest: 80, host: opts[:httpport], id: opts[:name]
+			#elsif opts[:name] == 'node3'
+				#subconfig.vm.network "forwarded_port", guest: 80, host: opts[:httpport], id: opts[:name]
+			#elsif opts[:name] == 'node4'
+				#subconfig.vm.network "forwarded_port", guest: 80, host: opts[:httpport], id: opts[:name]
+			#else
+			#	subconfig.vm.network "forwarded_port", guest: 80, host: opts[:httpport], id: opts[:name]
+			end
+			subconfig.vm.synced_folder "..", "/vagrant", id: "documentacion_proyectos"
+			subconfig.vm.provider "virtualbox" do |vb|
+				vb.customize ["modifyvm", :id, "--name", opts[:name]]
+				vb.customize ["modifyvm", :id, "--memory", opts[:mem]]
+				vb.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+				vb.customize ["modifyvm", :id, "--groups", opts[:group]]
+			end
+			subconfig.vm.post_up_message = "MÁQUINA VIRTUAL OK"
+		end
+	end
+	#config.vm.provision "shell", inline: <<-SHELL
+		#echo 'export http_proxy="http://yourproxy:8080"' >> /etc/environment
+	#SHELL
+end
+
+
+

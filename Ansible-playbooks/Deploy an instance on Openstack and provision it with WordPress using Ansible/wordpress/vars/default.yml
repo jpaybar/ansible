@@ -1,0 +1,15 @@
+---
+#System Settings
+### PHP extensions needed for WordPress configuration
+php_modules: [ 'php-curl', 'php-gd', 'php-mbstring', 'php-xml', 'php-xmlrpc', 'php-soap', 'php-intl', 'php-zip' ]
+
+#MySQL Settings
+mysql_root_password: "mysql_root_password"
+mysql_db: "wordpress"   ###WordPress Database name###
+mysql_user: "vagrant"     ###WordPress Database user###
+mysql_password: "vagrant"  ###New MySQL user password###
+
+#HTTP Settings
+http_host: "mywordpresswebsite"
+http_conf: "mywordpresswebsite.conf"
+http_port: "80"

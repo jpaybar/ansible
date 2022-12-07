@@ -1,0 +1,259 @@
+#####################################################################################################
+# This Playbook Installs Kubernetes cluster with Ansible behind a proxy on Ubuntu 20.04
+# This playbook is divided into several sections and playbooks in turn, starting with the creation 
+# of an operator for cluster management, the installation of Docker for image and container 
+# management, and the installation and basic configuration of the Kubernetes cluster.
+# https://kubernetes.io/docs/setup/production-environment/tools/_print/#
+#####################################################################################################
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+#################################### CREATE KUBERNETES OPERATOR #####################################
+    - name: Create the account "{{ kubernetes_operator }}".
+      user:
+        name: "{{ kubernetes_operator }}"
+        createhome: yes
+        shell: /bin/bash
+        append: yes
+        state: present  
+
+    - name: Create a "sudo" entry file for the account "{{ kubernetes_operator }}".
+      file:
+        path: "/etc/sudoers.d/{{ kubernetes_operator }}"
+        state: touch
+        mode: '0440'
+
+    - name: Set up "sudoers" without password for the account "{{ kubernetes_operator }}".
+      lineinfile:
+        dest: "/etc/sudoers.d/{{ kubernetes_operator }}"
+        line: '{{ kubernetes_operator }}  ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+         
+    - name: Copy the public key to "authorized_keys" file on "{{ kubernetes_operator }}'s" profile. 
+      authorized_key:
+        user: "{{ kubernetes_operator }}"
+        state: present
+        key: "{{ copy_public_key }}"
+
+    - name: Print account information.
+      command: id "{{ kubernetes_operator }}"
+      register: new_user_created
+
+    - debug:
+        msg: "{{ new_user_created.stdout_lines[0] }}"
+#####################################################################################################
+        
+######################################### INSTALL DOCKER ############################################   
+    # https://kubernetes.io/docs/setup/production-environment/tools/_print/#before-you-begin
+    - name: Disable swap and setup sysctl
+      command: "{{ item }}"
+      with_items:
+      - swapoff -a 
+      - modprobe overlay
+      - modprobe br_netfilter
+   
+    - name: Disable SWAP in /etc/fstab (comment line)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+        
+    #- name: Enable SWAP in /etc/fstabfstab (uncomment line)
+      #replace:
+        #path: /etc/fstab
+        #regexp: '^# (.+?\sswap\s+sw\s+.*)$'
+        #replace: '\1'
+        
+    # https://kubernetes.io/docs/setup/production-environment/tools/_print/#letting-iptables-see-bridged-traffic    
+    - name: Enable IP Fordwarding
+      template:
+        src: "files/kubernetes.conf.j2"
+        dest: "/etc/sysctl.d/kubernetes.conf"
+
+    - name: Install aptitude 
+      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+    - name: Install required packages for Docker set up
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common']
+
+    - name: Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository for Ubuntu 20.04
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+        filename: docker
+      tags: dockerrepo
+      
+    # https://docs.docker.com/engine/install/ubuntu/
+    - name: Update repository and install docker-ce
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'containerd.io', 'docker-ce', 'docker-ce-cli']
+      
+#====================================== IN CASE OF BEING BEHIND A PROXY =============================
+# https://docs.docker.com/config/daemon/systemd/#httphttps-proxy
+     
+    - name: Create Docker Service directory
+      file:
+        path: /etc/systemd/system/docker.service.d
+        state: directory
+        
+    - name: Set up proxy for Docker Service
+      template:
+        src: "files/http-proxy.conf.j2"
+        dest: "/etc/systemd/system/docker.service.d/http-proxy.conf"
+      
+#====================================================================================================  
+    # https://docs.docker.com/engine/reference/commandline/dockerd/    
+    - name: Set up cgroupdriver for systemd
+      template:
+        src: "files/daemon.json.j2"
+        dest: "/etc/docker/daemon.json"
+    
+    - name: Restart Docker Service and also daemon_reload to pick up config changes
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker      
+#####################################################################################################
+
+######################################### INSTALL KUBERNETES ########################################
+    # https://kubernetes.io/docs/setup/production-environment/tools/_print/#
+    - name: Add Google official GPG key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes Repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main 
+        state: present
+        filename: kubernetes
+        #mode: 0600
+      tags: kubernetesrepo
+
+    - name: Install Kubelet, Kubeadm and kubectl
+      apt: name={{ item }} state=present update_cache=yes
+      loop: [ 'kubelet=1.22.10-00', 'kubeadm=1.22.10-00', 'kubectl=1.24.1-00']
+      tags: kubetools
+       
+    #- name: INSTALL A SPECIFIC VERSION
+      #apt:
+        #name: kubeadm=1.14.0-00
+        #state: present
+
+    - name: Enable service kubelet persistently
+      service: 
+        name: kubelet
+        enabled: yes
+
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/reboot_module.html
+    - name: Reboot all the kubernetes nodes
+      reboot:
+        post_reboot_delay: 20
+        reboot_timeout: 60
+        connect_timeout: 60
+        test_command: uptime
+
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/pause_module.html
+    - pause: seconds=20
+#####################################################################################################
+
+########################### CONFIGURE KUBERNETES AND INITIALIZE THE CLUSTER #########################
+- hosts: controllers
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/command_module.html
+    # https://docs.ansible.com/ansible/latest/reference_appendices/playbooks_keywords.html
+    - name: Intilizing Kubernetes Cluster
+      command: kubeadm init --pod-network-cidr="{{ pod_network_ip }}"  --apiserver-advertise-address="{{ controller_node_ip }}"
+      run_once: true
+      delegate_to: "{{ controller_node_ip }}"
+
+    - pause: seconds=30
+
+    - name: Create .kube directory
+      become: yes
+      become_user: vagrant
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        remote_src: yes
+        owner: vagrant
+        
+    - name: Install Calico Pod network
+      become: yes
+      become_user: vagrant
+      shell: kubectl apply -f "{{ pod_network_cni }}" 
+
+    - pause: seconds=30
+#####################################################################################################
+
+############################ COPY KUBE CONFIG TO KUBERNETESOP HOME FOLDER ###########################
+    - name: Create .kube directory for kubernetesop
+      become: yes
+      become_user: root
+      file:
+        path: "/home/{{ kubernetes_operator }}/.kube"
+        state: directory
+        mode: 0755
+
+    - name: Copy admin.conf to kubernetesop kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ kubernetes_operator }}/.kube/config"
+        remote_src: yes
+        owner: "{{ kubernetes_operator }}"
+#####################################################################################################
+
+#################################### ADDING WORKERS TO THE CLUSTER ##################################
+    - name: Get the token for joining the nodes with Kuberentes master.
+      command: kubeadm token create  --print-join-command
+      register: kubernetes_join_command
+
+    - debug:
+        msg: "{{ kubernetes_join_command.stdout }}"
+        
+    # https://docs.ansible.com/ansible/latest/reference_appendices/playbooks_keywords.html
+    - name: Copy join command to local file on Ansible Node.
+      become: false
+      local_action: copy content="{{ kubernetes_join_command.stdout_lines[0] }}" dest="/tmp/kubernetes_join_command" mode=0777
+
+- hosts: nodes
+  become: yes    
+  tasks:
+
+    - name: Copy join command to worker nodes.
+      become: yes
+      become_method: sudo
+      become_user: root
+      copy:
+        src: /tmp/kubernetes_join_command
+        dest: /tmp/kubernetes_join_command
+        mode: 0777   
+
+    - name: Join the Worker nodes with the master.
+      become: yes
+      become_method: sudo
+      become_user: root
+      command: sh /tmp/kubernetes_join_command
+      register: joined_or_not
+
+    - debug:
+        msg: "{{ joined_or_not.stdout }}"
+#####################################################################################################        

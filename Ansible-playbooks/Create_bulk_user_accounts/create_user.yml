@@ -1,0 +1,30 @@
+---
+- name: Create bulk user accounts
+  hosts: all
+  become: true
+  vars_files:
+    - vars/password.yml
+    - vars/usernames.yml
+  tasks:
+    - name: Create users with generic password and generate key pair automatically 
+      user:
+        name: "{{ item }}"
+        password: "{{ password | password_hash('sha512') }}"
+        shell: /bin/bash
+        state: present
+        createhome: yes 
+        append: yes
+        groups:
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/{{ item }}_key
+        update_password: on_create
+      with_items:
+        - "{{ names }}"
+      register: user_status
+ 
+    - name: Force password change on first login
+      command: chage -d 0 "{{ item }}"
+      with_items:
+        - "{{ names }}"
+      when: user_status.changed

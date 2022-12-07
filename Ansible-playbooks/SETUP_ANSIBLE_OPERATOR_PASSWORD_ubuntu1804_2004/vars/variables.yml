@@ -1,0 +1,12 @@
+paquetes: [ 'vim', 'nano', 'curl' ]
+
+usuarios: 
+  - {name: 'ansibleop1', groups: ['wheel'], comment: 'Operador Ansible 1', password: '$6$CblTqZqo$nOSKFE5dVnlYJxLy7SRlvmhxWn71iWlHYSMm5kbMqOvqygnLNNE7703LK0qnb.R0U6m35482lyLn/mYqffvo01'}
+  - {name: 'ansibleop2', groups: ['wheel'], comment: 'Operador Ansible 2', password: '$6$CblTqZqo$nOSKFE5dVnlYJxLy7SRlvmhxWn71iWlHYSMm5kbMqOvqygnLNNE7703LK0qnb.R0U6m35482lyLn/mYqffvo01'}
+  
+# Para crear una password genérica encriptada podemos usar el comando “mkpasswd –method=sha-512”, si dicho comando no está disponible, instalar el paquete “whois”.
+
+grupo: wheel
+
+# password=password
+  

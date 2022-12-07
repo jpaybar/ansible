@@ -1,0 +1,14 @@
+$ORIGIN .
+$TTL 86400      ; 1 day
+10.168.192.in-addr.arpa    IN SOA dns.10.168.192.in-addr.arpa. postmaster.mydomain.com. (
+                                1          ; serial
+                                21600      ; refresh (6 hours)
+                                3600       ; retry (1 hour)
+                                604800     ; expire (1 week)
+                                21600      ; minimum (6 hours)
+                                )
+                        NS      dns.mydomain.com.
+$ORIGIN 10.168.192.in-addr.arpa.
+51                     PTR     node1.mydomain.com.
+52                     PTR     node2.mydomain.com.
+50                     PTR     dns.mydomain.com.

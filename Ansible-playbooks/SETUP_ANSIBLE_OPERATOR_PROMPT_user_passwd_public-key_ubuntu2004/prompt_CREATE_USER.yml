@@ -1,0 +1,69 @@
+#####################################################################################################
+# This playbook creates an ansible operator on the remote servers. To do this, it will request 
+# the username during the execution of the playbook and then the path to its public key.
+# The path may be defined by default in "/home/user/.ssh/id_rsa.pub" or any other where 
+# the public key is found.
+#
+# To connect using your custom private key, you should use the "--private-key" or "--key-file" 
+# parameter (the file should be in the default path ~/.ssh):
+#
+# ansible-playbook -i inventory_hosts --key-file=~/.ssh/my_custom_key playbook.yml
+#
+# An alternative would be specify your private key inside your "inventory" host using:
+#
+# ansible_ssh_private_key_file=/home/example/.ssh/my_custom_key
+#####################################################################################################
+---
+- hosts: all
+  become: yes
+  # https://docs.ansible.com/ansible/latest/user_guide/playbooks_prompts.html
+  vars_prompt:
+    - name: "new_user"
+      prompt: "An ansible operator account will be created on the remote servers, enter the username"
+      private: no
+      
+    - name: "public_key_path"
+      prompt: "Enter the path to the public key for this user"
+      private: no
+      
+    - name: "password"
+      prompt: "Enter password"
+      unsafe: yes
+      private: yes
+
+  tasks:
+    - name: Create the account "{{ new_user }}".
+      user:
+        name: "{{ new_user }}"
+        password: "{{ password | password_hash('sha512') }}"
+        createhome: yes
+        shell: /bin/bash
+        append: yes
+        state: present  
+
+    - name: Create a "sudo" entry file for the account "{{ new_user }}".
+      file:
+        path: "/etc/sudoers.d/{{ new_user }}"
+        state: touch
+        mode: '0600'
+
+    - name: Set up "sudoers" without password for the account "{{ new_user }}".
+      lineinfile:
+        dest: "/etc/sudoers.d/{{ new_user }}"
+        line: '{{ new_user }}  ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Copy the public key to "authorized_keys" file on "{{ new_user }}'s" profile.
+      authorized_key:
+         user: "{{ new_user }}"
+         state: present
+         #key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+         key: "{{ lookup('file', '{{ public_key_path }}') }}"
+
+    - name: Print account information.
+      shell: id "{{ new_user }}"
+      register: new_user_created
+
+    - debug:
+        msg: "{{ new_user_created.stdout_lines[0] }}"
+...

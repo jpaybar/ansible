@@ -1,0 +1,25 @@
+##########################
+# Example Inventory
+##########################
+
+#########################################################################
+# "webservers" and "dnsservers" are examples of groups with servers 
+# identified by a custom alias.
+#########################################################################
+[dnsservers]
+dns1 ansible_host=192.168.10.50
+
+[webservers]
+www1 ansible_host=192.168.10.51
+www2 ansible_host=192.168.10.52
+
+
+##########################################################################
+# Makes sure we use Python 3 (/usr/bin/python3) on remote hosts.
+# [all:vars] sets global values for all nodes.
+# This is necessary because by default Ansible will try to use
+# /usr/bin/python, which is not available on newer Ubuntu versions.
+##########################################################################
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+

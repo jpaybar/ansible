@@ -1,0 +1,41 @@
+---
+###################################################################################################
+# NOTE:
+# Only the Administrator can create new flavors, so the first thing to do is source our RC admin 
+# file: "source admin-openrc.sh"
+###################################################################################################
+#
+# REQUIRED (Install openstack.cloud collection, Needed to create new Flavors): 
+#
+# ansible-galaxy collection install openstack.cloud
+#
+# Run this playbook: "ansible-playbook Create_our_own_flavor.yml"
+#
+# https://docs.ansible.com/ansible/2.9/modules/list_of_cloud_modules.html#openstack
+###################################################################################################
+
+- name: Customize a new flavor
+  hosts: localhost
+  gather_facts: false
+  tasks:
+  
+  # https://docs.ansible.com/ansible/latest/collections/openstack/cloud/compute_flavor_module.html
+  - name: Create our own flavor
+    openstack.cloud.compute_flavor:
+      state: present
+      name: MY.small
+      ram: 2048
+      vcpus: 2
+      disk: 10
+      flavorid: 1a
+      
+  # # https://docs.ansible.com/ansible/2.9/modules/os_security_group_rule_module.html#os-security-group-rule-module
+  # - name: Add port 80 tcp to security group "default"
+    # os_security_group_rule:
+      # #cloud: mordred
+      # security_group: default
+      # protocol: tcp
+      # port_range_min: 80
+      # port_range_max: 80
+      # remote_ip_prefix: 0.0.0.0/0
+      # project: demo

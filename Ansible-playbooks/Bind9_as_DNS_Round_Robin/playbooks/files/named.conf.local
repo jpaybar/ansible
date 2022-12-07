@@ -1,0 +1,9 @@
+zone "mydomain.com" {
+     type master ;
+file "/var/cache/bind/db.mydomain.com";
+};
+
+zone "10.168.192.in-addr.arpa" {
+     type master ;
+file "/var/cache/bind/db.192.168.10";
+};

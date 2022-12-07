@@ -1,0 +1,16 @@
+---
+- name: Install and configure Apache2
+  hosts: webservers
+  become: true
+  tasks:
+  - name: Install Apache2 to the latest version
+    apt: 
+      name: apache2 
+      state: latest
+
+  - name: Copy index.html 
+    template: 
+      src: "templates/index.html.j2"
+      dest: "/var/www/html/index.html"
+      
+      

@@ -1,0 +1,106 @@
+########################################
+# Playbook: LEMP on Ubuntu 18.04/20.04 #
+########################################
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+    # https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+
+  tasks:
+    - name: Install Prerequisites
+      apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
+      loop: [ 'aptitude' ]
+      # Installing "aptitude" and force "aptitude" instead of "apt-get", that is
+      # because of "force_apt_get=yes" parameter.
+      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html
+
+    - name: Install LEMP Packages
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'nginx', 'mysql-server', 'python3-pymysql', 'php-fpm', 'php-mysql' ]
+      
+      # Pay attention to "php-fpm" version in nginx configuration file, in line:
+      
+      ### fastcgi_pass unix:/var/run/php/php7.4-fpm.sock; ###
+      
+      # "php7.4-fpm.sock" version could fail with "502 bad gateway error" opening a "info.php" file
+    
+# Nginx Configuration
+    - name: Sets Nginx conf file
+      template:
+        src: "files/nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/{{ http_conf }}"
+        # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/template_module.html
+        # Template files using Template-Module with Jinja2 files
+        
+    - name: Copy index test page
+      template:
+        src: "files/index.html.j2"
+        dest: "/var/www/{{ http_host }}/index.html"
+
+    - name: Enables new site
+      file:
+        src: "/etc/nginx/sites-available/{{ http_conf }}"
+        dest: "/etc/nginx/sites-enabled/{{ http_conf }}"
+        state: link
+      notify: Reload Nginx
+      # File-Module with "state: link" to enable nginx site, and calls a handler named "Reload Nginx"
+      # through "notify" statement to apply new configuration
+    
+    - name: Removes "default" site
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      notify: Reload Nginx
+      # File-Module with "state: absent" to delete "default" nginx site and after that is needed a reload
+
+# MySQL Configuration
+    # https://docs.ansible.com/ansible/latest/collections/community/mysql/index.html
+    - name: Sets the root password 
+      mysql_user: 
+        name: root 
+        password: "{{ mysql_root_password }}"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        # https://docs.ansible.com/ansible/latest/collections/community/mysql/mysql_user_module.html
+
+    - name: Removes all anonymous user accounts
+      mysql_user:
+        name: ''
+        host_all: yes
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Removes the MySQL test database
+      mysql_db: 
+        name: test 
+        state: absent
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        # https://docs.ansible.com/ansible/latest/collections/community/mysql/mysql_db_module.html
+
+# UFW Configuration
+    #- name: "UFW - Allow HTTP on port {{ http_port }}"
+    #  ufw:
+    #    rule: allow
+    #    port: "{{ http_port }}"
+    #    proto: tcp
+
+# Sets Up PHP Info Page
+    - name: Sets Up PHP Info Page
+      template:
+        src: "files/info.php.j2"
+        dest: "/var/www/{{ http_host }}/info.php"
+
+  handlers:
+  # https://docs.ansible.com/ansible/latest/user_guide/playbooks_handlers.html
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

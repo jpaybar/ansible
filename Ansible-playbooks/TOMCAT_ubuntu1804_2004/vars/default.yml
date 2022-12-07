@@ -1,0 +1,18 @@
+---
+# Run this command "sudo update-java-alternatives -l"
+# to get a similar output and take note of the path:
+# "java-1.11.0-openjdk-amd64      1111       /usr/lib/jvm/java-1.11.0-openjdk-amd64"
+java_home: "/usr/lib/jvm/java-1.11.0-openjdk-amd64"
+
+# Default Tomcat port
+http_port: "8080"   
+
+# Tomcat Web Management Interface Configuration File "/opt/tomcat/conf/tomcat-users.xml"
+tomcat_username: "admin"
+tomcat_password: "admin"
+tomcat_roles: "manager-gui,admin-gui"
+
+
+
+
+

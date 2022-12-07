@@ -1,0 +1,23 @@
+https://dev.mysql.com/doc/refman/8.0/en/tutorial.html
+=====================================================
+
+CONEXION:
+=========
+mysql -h host -u user -p
+
+DESCONEXION:
+============
+quit
+
+CONSULTAS:
+==========
+SELECT VERSION(), CURRENT_DATE;
+SELECT VERSION(); SELECT NOW();
+SELECT USER();
+SELECT NOW();
+
+DATABASE:
+=========
+SHOW DATABASES;
+USE "tabla";
+SHOW TABLES;

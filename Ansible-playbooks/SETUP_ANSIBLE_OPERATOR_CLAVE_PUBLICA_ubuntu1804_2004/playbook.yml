@@ -1,0 +1,52 @@
+#############################################################################
+# Crear Operador de Ansible - Acceso por clave pública                      #
+#############################################################################
+# Este playbook crea uno operador que podrá ejecutar ansible                #
+# para configurar nodos remotos de un inventario. El acceso será por        #
+# clave pública, por lo que la ejecución de este playbook realiza la copia  #
+# de esta al fichero "authorized_key" en el nodo/s remoto.                  #
+#                                                                           #
+#                                                                           #
+# ansible-playbook -l server1 -i servers_list playbook.yml                  #
+#                                                                           #
+#############################################################################
+
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/variables.yml
+
+  tasks:
+    - name: Instala vim, nano y curl
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        name: "{{ paquetes }}"
+        state: latest
+
+    - name: Crea el grupo "wheel"
+      group:
+        name: "{{ grupo }}"
+        state: present
+             
+    - name: Crea el operador de Ansible
+      user:
+        name: "{{ usuario }}"
+        state: present
+        comment: "{{ comentario }}"
+        groups: "{{ grupo }}"
+        append: yes
+        create_home: yes
+        shell: /bin/bash
+      
+    - name: Copia la clave pública al fichero "authorized_key" 
+      authorized_key:
+        user: "{{ usuario }}"
+        state: present
+        key: "{{ copia_clave_publica }}"        
+    
+    - name: Habilita sudo para el grupo "wheel"
+      template:
+        src: "files/sudoers_wheel.j2"
+        dest: "/etc/sudoers.d/sudoers_wheel"

@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+boxes = [
+    {
+        :name => "wordpress",
+        :eth1 => "192.168.56.200",
+        :mem => "2048",
+        :cpu => "2",
+		:box => "ubuntu2004",
+		:ssh => "22100",
+		:http => "80",
+		:group => "/wordpress_g"
+    }
+]
+
+Vagrant.configure(2) do |config|
+	if Vagrant.has_plugin?("vagrant-proxyconf")
+		config.proxy.http     = "http://your.proxy.here:8080"
+		config.proxy.https    = "http://your.proxy.here:8080"
+		config.proxy.no_proxy = "localhost,127.0.0.1,192.168.56.0/24"
+    end
+	boxes.each do |opts|
+		config.ssh.insert_key = false
+		config.vm.define opts[:name] do |subconfig|
+			subconfig.vm.box = opts[:box]
+			subconfig.vm.hostname = opts[:name]
+			subconfig.vm.network "private_network", ip: opts[:eth1]
+			#subconfig.vm.network "public_network", ip: opts[:eth1],bridge: "wlp4s0"
+			subconfig.vm.network "forwarded_port", guest: 22, host: opts[:ssh], id: "ssh"
+			subconfig.vm.network "forwarded_port", guest: 80, host: opts[:http], id: "http"
+			subconfig.vm.provider "virtualbox" do |vb|
+				vb.customize ["modifyvm", :id, "--name", opts[:name]]
+				vb.customize ["modifyvm", :id, "--memory", opts[:mem]]
+				vb.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
+				vb.customize ["modifyvm", :id, "--groups", opts[:group]]
+			end
+			subconfig.vm.post_up_message = "MÁQUINA VIRTUAL OK"
+		end
+	end
+	config.vm.provision "ansible_local" do |ansible|
+		ansible.playbook = "playbook.yml"
+    end
+end
+
+
+

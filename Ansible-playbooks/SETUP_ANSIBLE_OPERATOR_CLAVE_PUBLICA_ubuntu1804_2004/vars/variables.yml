@@ -1,0 +1,16 @@
+paquetes: [ 'vim', 'nano', 'curl' ]
+
+usuario: ansibleop 
+
+comentario: "Operador de Ansible"
+
+grupo: wheel
+
+# Copia la clave pública al fichero "authorized_key" desde una ruta alternativa
+# a "/home/user/.ssh/id_rsa.pub"
+copia_clave_publica: "{{ lookup('file', 'public_key/id_rsa.pub') }}"
+
+# Copia la clave pública al fichero "authorized_key" desde la ruta "~/.ssh/id_rsa.pub"
+# del usuario con el que estamos trabajando en la sesión actual.
+#copia_clave_publica: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+

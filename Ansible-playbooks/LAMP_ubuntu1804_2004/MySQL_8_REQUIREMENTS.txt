@@ -1,0 +1,6 @@
+https://dev.mysql.com/doc/mysql-monitor/8.0/en/system-prereqs-reference.html
+============================================================================
+
+2 CPU
+2 GB RAM
+4 GB DISK

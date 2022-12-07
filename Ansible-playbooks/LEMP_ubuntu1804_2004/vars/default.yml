@@ -1,0 +1,5 @@
+---
+mysql_root_password: "vagrant"
+http_host: "lempserver"
+http_conf: "lempserver.conf"
+http_port: "80"

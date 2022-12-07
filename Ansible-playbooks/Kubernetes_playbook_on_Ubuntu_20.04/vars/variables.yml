@@ -1,0 +1,15 @@
+---
+#################################### files/http-proxy.conf.j2 #######################################
+# Add your proxy settings and exceptions for docker and kubernetes.
+http_proxy: "http://10.40.56.3:8080"
+https_proxy: "http://10.40.56.3:8080"
+no_proxy: "localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.39.0/24,192.168.49.0/24,192.168.0.0/16,172.30.240.0/20"
+
+#################################### CREATE KUBERNETES OPERATOR #####################################
+kubernetes_operator: "kubernetesop"
+copy_public_key: "{{ lookup('file', 'public_key/kubernetesop.pub') }}"
+
+########################### CONFIGURE KUBERNETES AND INITIALIZE THE CLUSTER #########################
+pod_network_ip: "192.168.0.0/16"
+controller_node_ip: "172.30.240.11"
+pod_network_cni: "https://docs.projectcalico.org/manifests/calico.yaml"

@@ -1,0 +1,97 @@
+---
+#########################################################################################################
+# https://docs.ansible.com/ansible/2.9/modules/list_of_cloud_modules.html#openstack
+#
+# Run this playbook: "ansible-playbook Deploy_Openstack_Instance_And_Provisioning_WordPress.yml"
+#
+########################################=################################################################
+
+#======================================== FIRST PLAYBOOK BEGIN ==========================================
+
+- name: Deploy an OpenStack Instance customized with cloud-config
+  hosts: localhost
+  gather_facts: false
+  tasks:
+   
+  # https://docs.ansible.com/ansible/2.9/modules/os_server_module.html#os-server-module   
+  - name: Deploy an Instance Called "Ubuntu_18.04_WordPress"
+    #ignore_errors: yes #When re-running this task gives errors about duplicate item in security group 
+    os_server:
+      state: present
+      name: Ubuntu_18.04_WordPress
+      image: "Ubuntu 18.04"
+      flavor: MY.small
+      security_groups: default
+      #key_name: miclaveopenstack
+      nics:
+        #- net-id: 5b85e117-de84-41ae-b9ce-ceec9eb679ad
+        - net-name: private
+      auto_floating_ip: yes
+      meta:
+        hostname: wordpress.domain.local
+      wait: yes
+      userdata: |
+        #cloud-config
+        # create additional user
+        users:
+          - name: jpaybar
+            gecos: Juan M. Payan Barea (Ansible User)
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            ssh_authorized_keys:
+              - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDmW2InxZ0Wu7LmRIFf92Ot1BzBAaShaRkIYQCRBd7YUBsBUymnvKvkeYIDV1bEZrux839zkS51mUHY1lZASMpaYrcxTTwGsLc24kbDTVIch/U26q1/vXcg8GdZ350zZ7tjYnJ84YQ9AWZzkUSYfnbuTtmlxAO/Nxd4zWeDcJ3yZLIsU8cBhBXm8BVhheoT/Ybkv4U0uX1uO03li6H3sTZrqhTnokpIv70XDClX1aWh28VXkBpxf5lR3gsnn+sc21zBwuoAMvWErOO/TPGXRUBHFjK5eQY1klaONuNkPd35WzC+SBzoyqTGicfRlEo/E/4OGG7WbKR8ZOtmGPQKvbMc5A8tGA7rwIDH7IJ8Cwgo3C9Jt6P9HSaJMO6MZw2RgOtEoArTCkbOtIdwCSPYEo1mxR2bUhjEFzg+nETLubU2jDiE8gTLtycf3lSjGlY2LykCBQDSjnOe6CdcKyomixBW4vQWEbVyb99d+JwHutfTi3MNc+nD3N88CgNR+8v1jkM= vagrant@devstack
+        hostname: wordpress.domain.local 
+    register: wordpress
+    
+  # - debug: var=wordpress
+
+  # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/add_host_module.html
+  - name: Add "Ubuntu_18.04_WordPress" Instance to in-memory Inventory
+    add_host: 
+      name: wordpress 
+      groups: ubuntu
+      ansible_ssh_host: "{{ wordpress.server.public_v4 }}"
+      ansible_user: jpaybar
+      instance_name: "{{ wordpress.server.name }}"
+      
+#======================================== FIRST PLAYBOOK END ============================================
+
+#======================================== SECOND PLAYBOOK BEGIN =========================================
+
+- name: Configure "Ubuntu_18.04_WordPress" Instance from in-memory inventory
+  hosts: ubuntu
+  become: true
+  gather_facts: false
+  vars:
+     ansible_ssh_private_key_file: ~/.ssh/jpaybar
+
+  tasks:
+  
+    # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/wait_for_connection_module.html
+    - name: Wait for SSH service to become available
+      wait_for_connection:
+        delay: 5
+        timeout: 300
+
+    - name: Add nameserver to /etc/resolv.conf
+      lineinfile:
+        path: /etc/resolv.conf
+        line: nameserver 8.8.8.8
+        
+    - name: Add proxy server to /etc/environment
+      lineinfile:
+        path: /etc/environment
+        line: "{{ item.line }}"
+      loop:
+        - { line: 'export http_proxy="http://10.40.56.3:8080"' }
+        - { line: 'export https_proxy="http://10.40.56.3:8080"' }
+    
+#======================================== SECOND PLAYBOOK END ===========================================
+
+#======================================== THIRD PLAYBOOK BEGIN ==========================================
+
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/import_playbook_module.html
+- name: Install WordPress on "Ubuntu_18.04_WordPress" Instance 
+  import_playbook: wordpress/playbook.yml
+      
+#======================================== THIRD PLAYBOOK END ============================================

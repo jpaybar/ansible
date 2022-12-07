@@ -1,0 +1,33 @@
+#########################
+# Inventario de ejemplo #
+#########################
+
+############################################################################
+# El grupo "servers" está formado por 3 servidores con sus correspondientes
+# alias.
+############################################################################
+
+[servers]
+server1 ansible_host=192.168.10.50
+server2 ansible_host=192.168.10.51
+server3 ansible_host=192.168.10.52
+
+
+################################################################################
+# Debemos asegurarnos que usamos Python 3 (/usr/bin/python3) en los servidores.
+# [servers:vars] Configura valores de variables para todos los nodos en el grupo 
+# "servers", aunque podemos hacer que la configuración sea para todos los nodos
+# del inventario usando [all:vars].
+# 
+# Para evitar mostrar el warning durante la ejecución del playbook, podemos
+# declarar la siguiente varible "ansible_python_interpreter", asignandole 
+# la versión de Python.
+################################################################################
+[servers:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+################################################################################
+# También podríamos establecer el usuario de ansible para el grupo "servers" ó
+# para todos los nodos del inventario asginando el usuario en cuestión a la 
+# variable "ansible_user", dentro de [servers:vars] ó [all:vars].
+################################################################################

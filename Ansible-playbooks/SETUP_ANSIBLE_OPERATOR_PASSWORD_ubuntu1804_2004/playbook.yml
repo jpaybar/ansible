@@ -1,0 +1,48 @@
+#############################################################################
+# Crear Operadores de Ansible - Acceso via usuario/contraseña               #
+#############################################################################
+# Este playbook crea uno o más operadores que podrán ejecutar ansible       #
+# para configurar nodos remotos de un inventario. El acceso será por        #
+# contraseña, por lo que la ejecución de los playbooks con el comando       #
+# "ansible-playbook" deberán llevar los parametros -u "usuario" y           #
+# -k "password", por ejemplo:                                               #
+#                                                                           #
+# ansible-playbook -l server1 -i servers_list playbook.yml -u ansibleop1 -k #
+#                                                                           #
+#############################################################################
+
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/variables.yml
+
+  tasks:
+    - name: Instala vim, nano y curl
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        name: "{{ paquetes }}"
+        state: latest
+
+    - name: Crea el grupo "wheel"
+      group:
+        name: "{{ grupo }}"
+        state: present
+             
+    - name: Crea los operadores de Ansible
+      user:
+        name: "{{ item.name }}"
+        state: present
+        comment: "{{ item.comment }}"
+        password: "{{ item.password }}"
+        groups: "{{ item.groups }}"
+        append: yes
+        create_home: yes
+        shell: /bin/bash
+      with_items: "{{ usuarios }}"
+
+    - name: Habilita sudo para el grupo "wheel"
+      template:
+        src: "files/sudoers_wheel.j2"
+        dest: "/etc/sudoers.d/sudoers_wheel"

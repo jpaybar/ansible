@@ -1,0 +1,102 @@
+####################################
+# Playbook: TOMCAT on Ubuntu 20.04 #
+####################################
+
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+  # Aptitude configuration as a default .deb package manager
+    - name: Install aptitude
+      apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes  
+      loop: [ 'aptitude' ]
+
+  # Installing some prerequisites such as JDK and curl
+    - name: Install JDK and curl
+      apt: name={{ item }} update_cache=yes state=latest
+      loop: [ 'default-jdk', 'curl' ]
+
+  # Creating a group and user for Tomcat with no login shell and /opt/tomcat as a HOME dir
+    - name: Add a Group and user for Tomcat
+      shell: groupadd tomcat && useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+        
+  # A Tomcat 10 tarball is downloaded from the Apache official website
+    - name: Download Apache Tomcat tarball
+      get_url: 
+        url: https://dlcdn.apache.org/tomcat/tomcat-10/v10.0.14/bin/apache-tomcat-10.0.14.tar.gz      
+        dest: /tmp
+      
+  # Creating Tomcat installation dir under /opt
+    - name: Create Apache Tomcat home directory.
+      file:
+        path: /opt/tomcat
+        state: directory
+      
+  # Extracting Tomcat tarball to /opt/tomcat that we had previously created
+    - name: Extract Apache Tomcat.
+      unarchive:
+        src: /tmp/apache-tomcat-10.0.14.tar.gz
+        dest: /opt/tomcat
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+        
+  # Setting Tomcat folder/files security permissions and owner
+    - name: Set up Tomcat folder permissions and owner.
+      file:
+        path: /opt/tomcat
+        owner: tomcat
+        group: tomcat
+        mode: "u+rwx,g+rx,o=rx"
+        recurse: yes
+        state: directory
+
+  # Running Tomcat as a service
+    - name: Create service file for Apache tomcat
+      template:
+        src: "files/tomcat.service.j2"
+        dest: "/etc/systemd/system/tomcat.service"
+        
+  # Starting and enabling Tomcat service with systemd module
+    - name: Start and enable Tomcat service
+      systemd:
+        name: tomcat
+        state: started
+        enabled: true
+        daemon_reload: true
+
+  # UFW Configuration
+    #- name: "UFW - Allow HTTP on port {{ http_port }}"
+    #  ufw:
+    #    rule: allow
+    #    port: "{{ http_port }}"
+    #    proto: tcp
+
+  # Configuring Tomcat Web Management Interface
+    - name: Configure Tomcat Web Management for admin
+      template:
+        src: "files/tomcat-users.xml.j2"
+        dest: "/opt/tomcat/conf/tomcat-users.xml"
+
+    - name: Configure Tomcat Manager App to remove restrict access to connections coming from the server itself
+      template:
+        src: "files/context.xml.j2"
+        dest: "/opt/tomcat/webapps/manager/META-INF/context.xml"
+
+    - name: Configure Tomcat Host Manager to remove restrict access to connections coming from the server itself
+      template:
+        src: "files/context.xml.j2"
+        dest: "/opt/tomcat/webapps/host-manager/META-INF/context.xml"
+      notify: Restart Tomcat
+
+  # Handlers for Tomcat service
+  handlers:
+    - name: Restart Tomcat
+      service:
+        name: tomcat    
+        state: restarted
+
+  
+
+  
