@@ -91,6 +91,16 @@ Iniciamos el cluster (podemos modificar la cantidad de `cpus` y `memoria`):
 ```powershell
 minikube start --memory 6g --cpus 4 --addons=ingress
 ```
+Si nos muestra un Warning del tipo:
+
+❗  You cannot change the memory size for an existing minikube cluster. Please first delete the cluster.
+❗  You cannot change the CPUs for an existing minikube cluster. Please first delete the cluster.
+
+Deberemos eliminar el cluster tal como nos indica y volver a ejecutar el comando para iniciar lo:
+
+```powershell
+minikube delete
+```
 
 De esta forma se podrá descargar la imágen y arrancar la MV en `VirtualBox`, pero no se podrá configurar el cluster. Durante la instalación aparecerá un simbolo de exclamacion rojo que nos informará que la dirección IP del Nodo no está excluida del Proxy.
 
