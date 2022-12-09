@@ -96,7 +96,7 @@ Si nos muestra un Warning del tipo:
 ❗  You cannot change the memory size for an existing minikube cluster. Please first delete the cluster.
 ❗  You cannot change the CPUs for an existing minikube cluster. Please first delete the cluster.
 
-Deberemos eliminar el cluster tal como nos indica y volver a ejecutar el comando para iniciar lo:
+Deberemos eliminar el cluster tal como nos indica y volver a ejecutar el comando para iniciarlo:
 
 ```powershell
 minikube delete
