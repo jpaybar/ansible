@@ -1,4 +1,0 @@
----
-# vars file for jpaybar.Mysql
-
-mysql_template_config: "mysqld.cnf_ubuntu1804.j2"

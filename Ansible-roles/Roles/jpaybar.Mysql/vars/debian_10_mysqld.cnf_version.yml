@@ -1,4 +1,0 @@
----
-# vars file for jpaybar.Mysql
-
-mysql_template_config: "50-server.cnf_debian10.j2"
