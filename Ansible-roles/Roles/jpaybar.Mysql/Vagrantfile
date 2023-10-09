@@ -1,0 +1,139 @@
+# -*- mode: ruby -*-
+
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+	config.proxy.http     = "http://10.40.56.3:8080"
+	config.proxy.https    = "http://10.40.56.3:8080"
+	config.proxy.no_proxy = "localhost,127.0.0.1"
+  end
+  
+################################# UBUNTU #######################################
+  config.vm.define "ubuntu1804" do |ubuntu1804|
+    ubuntu1804.vm.box = "ubuntu1804"
+    ubuntu1804.vm.hostname = 'ubuntu1804'
+    ubuntu1804.vm.network :private_network, ip: "192.168.10.52"
+    ubuntu1804.vm.network :forwarded_port, guest: 22, host: 22052, id: "ssh"
+	ubuntu1804.vm.network :forwarded_port, guest: 3306, host: 3352, id: "mysql"
+	ubuntu1804.vm.synced_folder ".", "/vagrant", disabled: true
+	ubuntu1804.vbguest.auto_update = false
+	ubuntu1804.vm.provider "virtualbox" do |vb|
+		vb.memory = "2048"
+		vb.cpus = "2"
+		vb.name = "ubuntu1804" 
+    end
+    # ubuntu1804.vm.provision :ansible do |ansible|
+		# ansible.playbook = "test.yml"
+    # end
+  end
+  config.vm.define "ubuntu2004" do |ubuntu2004|
+    ubuntu2004.vm.box = "ubuntu2004"
+    ubuntu2004.vm.hostname = 'ubuntu2004'
+    ubuntu2004.vm.network :private_network, ip: "192.168.10.51"
+    ubuntu2004.vm.network :forwarded_port, guest: 22, host: 22051, id: "ssh"
+	ubuntu2004.vm.network :forwarded_port, guest: 3306, host: 3351, id: "mysql"
+	ubuntu2004.vbguest.auto_update = false
+	ubuntu2004.vm.provider "virtualbox" do |vb|
+		vb.memory = "2048"
+		vb.cpus = "2"
+		vb.name = "ubuntu2004" 
+    end
+    # ubuntu2004.vm.provision :ansible do |ansible|
+		# ansible.playbook = "test.yml"
+    # end
+  end
+  # config.vm.define "ubuntu2204" do |ubuntu2204|
+    # ubuntu2204.vm.box = "ubuntu2204"
+    # ubuntu2204.vm.hostname = 'ubuntu2204'
+    # ubuntu2204.vm.network :private_network, ip: "192.168.10.50"
+    # ubuntu2204.vm.network :forwarded_port, guest: 22, host: 22050, id: "ssh"
+	# ubuntu2204.vm.network :forwarded_port, guest: 3306, host: 3350, id: "mysql"
+	# ubuntu2204.vbguest.auto_update = false
+	# ubuntu2204.vm.provider "virtualbox" do |vb|
+		# vb.memory = "2048"
+		# vb.cpus = "2"
+		# vb.name = "ubuntu2204" 
+    # end
+    # # ubuntu2204.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+################################################################################
+
+################################# DEBIAN #######################################
+  # config.vm.define "debian10" do |debian10|
+    # debian10.vm.box = "debian10"
+    # debian10.vm.hostname = 'debian10'
+    # debian10.vm.network :private_network, ip: "192.168.10.61"
+    # debian10.vm.network :forwarded_port, guest: 22, host: 22061, id: "ssh"
+	# debian10.vm.network :forwarded_port, guest: 3306, host: 3361, id: "mysql"
+	# debian10.vm.synced_folder ".", "/vagrant", disabled: true
+	# debian10.vbguest.auto_update = false
+	# debian10.vm.provider "virtualbox" do |vb|
+		# vb.memory = "2048"
+		# vb.cpus = "2"
+		# vb.name = "debian10" 
+    # end
+    # # debian10.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  # config.vm.define "debian11" do |debian11|
+    # debian11.vm.box = "debian11"
+    # debian11.vm.hostname = 'debian11'
+    # debian11.vm.network :private_network, ip: "192.168.10.60"
+    # debian11.vm.network :forwarded_port, guest: 22, host: 22060, id: "ssh"
+	# debian11.vm.network :forwarded_port, guest: 3306, host: 3360, id: "mysql"
+	# debian11.vm.synced_folder ".", "/vagrant", disabled: true
+	# debian11.vbguest.auto_update = false
+	# debian11.vm.provider "virtualbox" do |vb|
+		# vb.memory = "2048"
+		# vb.cpus = "2"
+		# vb.name = "debian11" 
+    # end
+    # # debian11.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+################################################################################
+
+################################# CENTOS #######################################
+  # config.vm.define "centos79" do |centos79|
+    # centos79.vm.box = "centos79"
+    # centos79.vm.hostname = 'centos79'
+    # centos79.vm.network :private_network, ip: "192.168.10.71"
+    # centos79.vm.network :forwarded_port, guest: 22, host: 22071, id: "ssh"
+	# centos79.vm.network :forwarded_port, guest: 3306, host: 3371, id: "mysql"
+	# centos79.vm.synced_folder ".", "/vagrant", disabled: true
+	# centos79.vbguest.auto_update = false
+	# centos79.vm.provider "virtualbox" do |vb|
+		# vb.memory = "2048"
+		# vb.cpus = "2"
+		# vb.name = "centos79" 
+    # end
+    # # centos79.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+  # config.vm.define "centos85" do |centos85|
+    # centos85.vm.box = "centos85"
+    # centos85.vm.hostname = 'centos85'
+    # centos85.vm.network :private_network, ip: "192.168.10.70"
+    # centos85.vm.network :forwarded_port, guest: 22, host: 22070, id: "ssh"
+	# centos85.vm.network :forwarded_port, guest: 3306, host: 3370, id: "mysql"
+	# centos85.vm.synced_folder ".", "/vagrant", disabled: true
+	# centos85.vbguest.auto_update = false
+	# centos85.vm.provider "virtualbox" do |vb|
+		# vb.memory = "2048"
+		# vb.cpus = "2"
+		# vb.name = "centos85" 
+    # end
+    # # centos85.vm.provision :ansible do |ansible|
+		# # ansible.playbook = "test.yml"
+    # # end
+  # end
+################################################################################  
+
+end

@@ -1,0 +1,8 @@
+---
+# vars file for jpaybar.Mysql
+
+mysql_daemon: mariadb
+mysql_enabled_on_startup: yes
+mysql_packages:
+- mariadb-server
+mysql_config_file: /etc/my.cnf

@@ -1,0 +1,16 @@
+---
+# vars file for jpaybar.Mysql
+
+# MySQL
+mysql_daemon: mysqld
+mysql_enabled_on_startup: yes
+mysql_packages:
+- mysql-server
+mysql_config_file: /etc/my.cnf
+
+# firewalld
+firewalld_daemon: firewalld
+firewalld_zone: public
+firewalld_service: mysql
+
+

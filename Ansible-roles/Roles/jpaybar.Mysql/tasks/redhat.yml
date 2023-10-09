@@ -1,0 +1,82 @@
+# tasks file for jpaybar.Mysql
+# firewall-cmd --permanent --zone=public --add-service=mysql
+# yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+# dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+---
+  - name: Install epel-release for extra packages on rhel8
+    yum:
+      name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "8.8")
+
+  - name: Import EPEL GPG key on rhel8
+    rpm_key:
+      key: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "8.8")
+
+  - name: Install epel-release for extra packages on rhel9
+    yum:
+      name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "9.2")
+
+  - name: Import EPEL GPG key on rhel9.
+    rpm_key:
+      key: /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "9.2")
+
+  - name: Install MySQL
+    yum:
+      name: "{{ mysql_packages }}"
+      state: present
+
+  - name: Enable and start MySQL on boot.
+    service: "name={{ mysql_daemon }} state=started enabled={{ mysql_enabled_on_startup }}"
+
+  - name: Install python3-mysqlclient on Red Hat 8.8
+    yum:
+      name: python3-mysqlclient
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "8.8")
+
+  - name: Install python3-PyMySQL on Red Hat 9.2
+    yum:
+      name: python3-PyMySQL
+      state: present
+    when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_version'] == "9.2")
+
+  - name: Set MySQL root password and privileges
+    mysql_user:
+      name: "{{ mysql_root_username }}"
+      host: "{{ item }}"
+      password: "{{ mysql_root_password }}"
+      login_user: "{{ mysql_root_username }}"
+      login_password: "{{ mysql_root_password }}"
+      login_unix_socket: /var/lib/mysql/mysql.sock
+      check_implicit_admin: yes
+      priv: "*.*:ALL,GRANT"
+    with_items:
+      - "{{ ansible_hostname }}"
+      - 127.0.0.1
+      - ::1
+      - localhost
+      - 192.168.227.16 ###=== Allow remote connection to user "root" from this IP ===###
+        ###=== The "bind-address" parameter must also be modified  ===###
+        ###=== in the MySQL global configuration file to allow remote connections ===###
+
+  - name: Copy global MySQL configuration template.
+    template:
+      src: "{{ mysql_template_config }}"
+      dest: "{{ mysql_config_file }}"
+    notify: restart mysql
+
+  - name: Enable MySQL service on Firewalld 
+    firewalld:
+      zone: "{{ firewalld_zone }}"
+      service: "{{ firewalld_service }}"
+      permanent: true
+      state: enabled
+    become: yes
+    notify: reload firewalld 
