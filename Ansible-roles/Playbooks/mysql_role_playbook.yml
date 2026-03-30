@@ -1,6 +1,6 @@
+# mysql_role_playbook.yml
 ---
-- hosts: all
+- hosts: dbservers
   become: true
   roles:
     - ../Roles/jpaybar.Mysql
-   

@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for Ansible-roles/Roles/jpaybar.Nginx_Proxy
+
+- name: Reload Nginx
+  service:
+    name: nginx
+    state: reloaded

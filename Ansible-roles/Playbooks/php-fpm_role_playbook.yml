@@ -1,6 +1,6 @@
+# php-fpm_role_playbook.yml
 ---
-- hosts: all
+- hosts: webservers
   become: true
   roles:
     - ../Roles/jpaybar.Php-fpm
-   

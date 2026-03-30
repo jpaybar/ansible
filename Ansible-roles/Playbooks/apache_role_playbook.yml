@@ -1,6 +1,6 @@
+# apache_role_playbook.yml
 ---
-- hosts: all
+- hosts: webservers
   become: true
   roles:
     - ../Roles/jpaybar.Apache2
-   

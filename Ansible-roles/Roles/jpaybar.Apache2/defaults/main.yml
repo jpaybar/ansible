@@ -1,12 +1,6 @@
 ---
 # defaults file for jpaybar.Apache2
 
-vhost:
-  ip: "{{ ansible_host }}"
-  #listen:
-    #- http: 80
-    #- https: 443
-  serverName: "myapacheserver"
-  documentRoot: "/var/www/myapacheserver"
-
-ansible_operator: "vagrant"
+apache_server_name: "{{ inventory_hostname }}"
+apache_document_root: "/var/www/html"
+apache_port: 443

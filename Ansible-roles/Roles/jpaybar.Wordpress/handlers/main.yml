@@ -1,0 +1,7 @@
+---
+# handlers file for jpaybar.Wordpress
+
+- name: Reiniciar Apache
+  service:
+    name: apache2
+    state: restarted

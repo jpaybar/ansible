@@ -1,0 +1,57 @@
+---
+# tasks file for jpaybar.Wordpress
+
+- name: Instalar dependencias necesarias (Python y PHP)
+  apt:
+    name:
+      - python3-pymysql
+      - php-curl
+      - php-gd
+      - php-mbstring
+      - php-xml
+      - php-zip
+    state: present
+
+# - name: Crear la base de datos 'wordpress'
+#   community.mysql.mysql_db:
+#     name: "{{ wp_db_name }}"
+#     state: present
+#     login_user: "{{ wp_db_user }}"
+#     login_password: "{{ wp_db_pass }}"
+#     login_host: "{{ wp_db_host }}"
+
+- name: Descargar el código de WordPress
+  get_url:
+    url: "https://wordpress.org/latest.tar.gz"
+    dest: "/tmp/wordpress.tar.gz"
+
+- name: Asegurar que el directorio de destino existe
+  file:
+    path: "{{ wp_install_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Descomprimir WordPress en el directorio web
+  unarchive:
+    src: "/tmp/wordpress.tar.gz"
+    dest: "/var/www/html"
+    remote_src: yes
+    creates: "/var/www/html/wordpress/index.php"
+
+- name: Ajustar permisos de propietario a www-data
+  file:
+    path: "{{ wp_install_dir }}"
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Configurar wp-config.php desde el template
+  template:
+    src: wp-config.php.j2
+    dest: "{{ wp_install_dir }}/wp-config.php"
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  notify: Reiniciar Apache

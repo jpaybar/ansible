@@ -1,0 +1,16 @@
+---
+
+# ProxyJump establece server1 como bastión SSH para acceder a server3,
+# que no dispone de IP flotante. ForwardAgent propaga el agente SSH
+# a través del salto para autenticar sin necesidad de copiar claves privadas.
+# Inventories/group_vars/dbservers.yml
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=no
+  -o UserKnownHostsFile=/dev/null
+  -o ForwardAgent=yes
+  -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ForwardAgent=yes -W %h:%p -J ubuntu@{{ hostvars[groups['proxy'][0]]['ansible_host'] }} ubuntu@{{ hostvars[groups['webservers'][0]]['ansible_host'] }}"
+  
+# Datos para instalar wordpress
+mysql_db_name: "wordpress"
+mysql_user_name: "test"
+mysql_user_password: "test"

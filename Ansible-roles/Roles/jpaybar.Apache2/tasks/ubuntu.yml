@@ -2,81 +2,48 @@
 # tasks file for jpaybar.Apache2
 
 ############################################# APACHE SETUP ######################################################
-- name: Install prerequisites
-  apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
-  loop: [ 'aptitude' ]
-  tags: Install_prerequisites
-  
-- name: Install Apache
-  apt: name={{ item }} state=latest
-  loop: ['{{ install_packages }}']
-  tags: Install_apache
-#################################################################################################################
+- name: Install Apache and OpenSSL
+  apt:
+    name: "{{ install_packages }}"
+    state: present
+    update_cache: yes
 
-##################################### SELF-SIGNED SSL CERT SETUP ################################################  
-- name: Copy SSL certificate files
-  copy: src={{ item.src }} dest={{ item.dest }} mode={{ item.mode }} owner={{ item.owner }} group={{ item.group }} 
-  with_items:
-    - { src: "myapacheserver.crt", dest: "{{ apache.certLocation }}", mode: "0644", owner: "root", group: "root" }
-    - { src: "myapacheserver.key", dest: "{{ apache.certKeyLocation }}", mode: "0640", owner: "root", group: "ssl-cert" }
-  tags: Copy_certfiles
-  
-- name: Copy SSL Parameter File
-  copy: src={{ item.src }} dest={{ item.dest }}
-  with_items: 
-    - { src: "ssl-params.conf", dest: "/etc/apache2/conf-available/ssl-params.conf"}
-  tags: Copy_SSL_parameterFile
-#################################################################################################################
-
-###################################### ENABLE APACHE MODS AND SSL CONF FILE #####################################
+####################################### ENABLE APACHE MODS ######################################################
 - name: Enable Apache mods
   apache2_module:
     name: "{{ item }}"
     state: present
-  with_items: 
-    - "{{ apache_mods }}"
+  loop: "{{ apache_mods }}"
   notify: Reload Apache
-  tags: A2enmod_modules
-  
-- name: Enable SSL parameters file
-  command: /usr/sbin/a2enconf ssl-params
-  notify: Reload Apache
-  tags: Enable_SSL_parameterFile
-#################################################################################################################
 
-############################################## VHOSTS SETUP #####################################################    
-- name: Create website folder
-  file:
-    path: "{{ vhost.documentRoot }}"
-    state: directory
-  tags: Website_folder
-  
-- name: Copy info.php file
-  copy:
-    src: "info.php"
-    dest: "{{ vhost.documentRoot }}"
-  tags: Copy_info.php
+##################################### SELF-SIGNED SSL CERT SETUP ################################################
+- name: Generate self-signed certificate
+  command: >
+    openssl req -x509 -nodes -days 365
+    -newkey rsa:2048
+    -keyout {{ apache_key_path }}
+    -out {{ apache_cert_path }}
+    -subj "/CN={{ apache_server_name }}"
+  args:
+    creates: "{{ apache_cert_path }}"
 
-- name: Apply templates
-  template: src={{ item.src }} dest={{ item.dest }} #mode={{ item.mode }}
-  with_items:
-    - { src: "vhost.conf.j2", dest: "/etc/apache2/sites-available/{{ vhost.serverName }}.conf" }
-    - { src: "ssl-vhost.conf.j2", dest: "/etc/apache2/sites-available/ssl-{{ vhost.serverName }}.conf" }
-    - { src: "index.html.j2", dest: "{{ vhost.documentRoot }}/index.html" }
-  tags: Apply_templates
-  
-- name: Enable vhost
-  command: /usr/sbin/a2ensite {{ vhost.serverName }}
+- name: Copy default-ssl vhost config
+  template:
+    src: default-ssl.conf.j2
+    dest: /etc/apache2/sites-available/default-ssl.conf
   notify: Reload Apache
-  tags: Enable_vhost
-  
-- name: Enable ssl-vhost
-  command: /usr/sbin/a2ensite ssl-{{ vhost.serverName }}
+
+############################################## SITE SETUP #######################################################
+- name: Enable default SSL site
+  command: a2ensite default-ssl
   notify: Reload Apache
-  tags: Enable_ssl-vhost
-  
-- name: Disable default Apache site
-  command: /usr/sbin/a2dissite 000-default.conf
-  notify: Reload Apache  
-  tags: A2dissite_default
-#################################################################################################################
+
+- name: Disable default HTTP site
+  command: a2dissite 000-default.conf
+  notify: Reload Apache
+
+- name: Ensure Apache is started and enabled
+  service:
+    name: apache2
+    state: started
+    enabled: yes

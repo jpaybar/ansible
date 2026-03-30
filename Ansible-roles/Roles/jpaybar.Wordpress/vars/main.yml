@@ -1,0 +1,8 @@
+---
+# vars file for jpaybar.Wordpress
+
+mysql_root_password: "root"
+wp_db_name: "wordpress"
+wp_db_user: "test"
+wp_db_pass: "test"
+wp_install_dir: "/var/www/html/wordpress"

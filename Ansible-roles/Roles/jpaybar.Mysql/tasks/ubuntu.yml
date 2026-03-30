@@ -11,6 +11,7 @@
   pip:
     name: pymysql
     state: present
+    extra_args: "--break-system-packages"
     
 - name: Set MySQL root password and privileges  
   mysql_user:  
@@ -23,13 +24,10 @@
     check_implicit_admin: yes  
     priv: "*.*:ALL,GRANT"  
   with_items:  
-  - "{{ ansible_hostname }}"  
+  - "{{ ansible_facts['hostname'] }}"  
   - 127.0.0.1  
   - ::1  
   - localhost
-  - 192.168.10.20 ###=== Allow remote connection to user "root" from this IP ===###
-                  ###=== The "bind-address" parameter must also be modified  ===###
-                  ###=== in the MySQL global configuration file to allow remote connections ===###
   
 - name: Copy global MySQL configuration template.
   template:

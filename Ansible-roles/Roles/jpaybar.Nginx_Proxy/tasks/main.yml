@@ -1,0 +1,52 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for Ansible-roles/Roles/jpaybar.Nginx_Proxy
+
+- name: Install Nginx and OpenSSL
+  apt:
+    name:
+      - nginx
+      - openssl
+    state: present
+    update_cache: yes
+
+- name: Create SSL directory
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    mode: '0755'
+
+- name: Generate self-signed certificate
+  command: >
+    openssl req -x509 -nodes -days 365
+    -newkey rsa:2048
+    -keyout /etc/nginx/ssl/nginx.key
+    -out /etc/nginx/ssl/nginx.crt
+    -subj "/CN={{ proxy_hostname }}"
+  args:
+    creates: /etc/nginx/ssl/nginx.crt
+
+- name: Copy proxy virtualhost config
+  template:
+    src: wordpress_proxy.conf.j2
+    dest: /etc/nginx/sites-available/wordpress_proxy.conf
+  notify: Reload Nginx
+
+- name: Enable site
+  file:
+    src: /etc/nginx/sites-available/wordpress_proxy.conf
+    dest: /etc/nginx/sites-enabled/wordpress_proxy.conf
+    state: link
+  notify: Reload Nginx
+
+- name: Remove default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload Nginx
+
+- name: Ensure Nginx is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes

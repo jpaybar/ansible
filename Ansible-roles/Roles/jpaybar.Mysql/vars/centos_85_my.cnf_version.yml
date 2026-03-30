@@ -1,4 +1,0 @@
----
-# vars file for jpaybar.Mysql
-
-mysql_template_config: "my.cnf_centos85.j2"

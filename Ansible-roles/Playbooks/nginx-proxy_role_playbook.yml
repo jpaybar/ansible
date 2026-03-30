@@ -1,0 +1,6 @@
+# nginx-proxy_role_playbook.yml
+---
+- hosts: proxy
+  become: true
+  roles:
+    - ../Roles/jpaybar.Nginx_Proxy

@@ -9,12 +9,10 @@ mysql_user_password: test
 mysql_root_username: root
 mysql_root_password: root
 
+# MySQL database name
+mysql_db_name: "wordpress"
+
 # MySQL settings.
 mysql_port: "3306"
 mysql_bind_address: '0.0.0.0'
 mysql_datadir: /var/lib/mysql
-
-
-
-
-

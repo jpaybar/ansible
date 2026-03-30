@@ -1,0 +1,2 @@
+---
+app_server_ip: "{{ hostvars[groups['webservers'][0]]['ansible_host'] }}"

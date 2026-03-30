@@ -1,18 +1,14 @@
 ---
 # vars file for jpaybar.Apache2
 
-apache:
-  #listen:
-    #- http: 80
-    #- https: 443
-  certLocation: "/etc/ssl/certs/myapacheserver.crt"
-  certKeyLocation: "/etc/ssl/private/myapacheserver.key"
-
 install_packages:
   - apache2
-  
+  - openssl
+
 apache_mods:
   - ssl
   - headers
   - rewrite
-  
+
+apache_cert_path: "/etc/ssl/certs/apache.crt"
+apache_key_path: "/etc/ssl/private/apache.key"

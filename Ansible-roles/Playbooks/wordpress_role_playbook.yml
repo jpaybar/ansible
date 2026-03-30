@@ -1,0 +1,6 @@
+# wordpress_role_playbook.yml
+---
+- hosts: wordpress
+  become: true
+  roles:
+    - ../Roles/jpaybar.Wordpress

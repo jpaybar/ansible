@@ -1,0 +1,5 @@
+---
+# defaults file for jpaybar.Wordpress
+
+# Estos valores se usan si no se definen en vars/main.yml
+wp_version: "latest"

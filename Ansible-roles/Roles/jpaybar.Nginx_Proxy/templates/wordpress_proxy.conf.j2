@@ -1,0 +1,29 @@
+# Redirige HTTP → HTTPS
+server {
+    listen 80;
+    server_name {{ proxy_hostname }};
+    return 301 https://$host$request_uri;
+}
+
+# Proxy inverso HTTPS
+server {
+    listen 443 ssl;
+    server_name {{ proxy_hostname }};
+
+    # Certificado autofirmado de server1
+    ssl_certificate     /etc/nginx/ssl/nginx.crt;
+    ssl_certificate_key /etc/nginx/ssl/nginx.key;
+
+    location / {
+        # Redirige al servidor de aplicación WordPress
+        proxy_pass https://{{ app_server_ip }}:{{ app_server_port }};
+
+        # Certificado autofirmado en server2, desactivamos verificación SSL
+        proxy_ssl_verify off;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

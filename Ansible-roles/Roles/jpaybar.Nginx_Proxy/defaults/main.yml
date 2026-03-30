@@ -1,0 +1,9 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for Ansible-roles/Roles/jpaybar.Nginx_Proxy
+
+# Hostname del proxy inverso (este mismo servidor)
+proxy_hostname: "{{ inventory_hostname }}"
+
+# Puerto donde escucha Apache en el servidor de aplicación
+app_server_port: 443

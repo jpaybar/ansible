@@ -3,6 +3,3 @@
 
 - name: restart mysql
   service: "name={{ mysql_daemon }} state=restarted"
-
-- name: reload firewalld 
-  service: "name={{ firewalld_daemon }} state=reloaded"

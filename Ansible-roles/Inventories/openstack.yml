@@ -1,0 +1,21 @@
+# "openstack" apunta al nombre definido en ~/.config/openstack/clouds.yaml
+plugin: openstack.cloud.openstack
+cloud: openstack
+# Carga todas las variables de las instancias (metadatos, IPs, etc.)
+expand_hostvars: true
+# Para en caso de error en lugar de ignorarlo silenciosamente
+fail_on_errors: true
+# Desactiva los grupos automáticos (RegionOne, flavor, image, instance-uuid, meta-*)
+legacy_groups: false
+compose:
+  # Variables de conexión equivalentes a las del hosts.yml estático
+  ansible_user: "'ubuntu'"
+  ansible_ssh_private_key_file: "'~/.ssh/id_rsa'"
+  ansible_python_interpreter: "'/usr/bin/python3'"
+# Grupos definidos explícitamente a partir de los metadatos de Nova/Terraform
+groups:
+  proxy: openstack.metadata.role == 'proxy'
+  webservers: openstack.metadata.role == 'webserver'
+  dbservers: openstack.metadata.role == 'database'
+  wordpress: openstack.metadata.get('application') == 'wordpress'
+  production: openstack.metadata.environment == 'production'

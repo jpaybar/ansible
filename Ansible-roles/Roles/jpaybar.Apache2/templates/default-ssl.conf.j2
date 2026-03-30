@@ -1,0 +1,26 @@
+<VirtualHost *:443>
+	ServerAdmin webmaster@localhost
+	ServerName {{ apache_server_name }}
+
+	DocumentRoot {{ apache_document_root }}
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+	SSLEngine on
+
+	SSLCertificateFile      {{ apache_cert_path }}
+	SSLCertificateKeyFile   {{ apache_key_path }}
+
+	<FilesMatch "\.(?:cgi|shtml|phtml|php)$">
+		SSLOptions +StdEnvVars
+	</FilesMatch>
+	<Directory /usr/lib/cgi-bin>
+		SSLOptions +StdEnvVars
+	</Directory>
+
+	<Directory {{ apache_document_root }}>
+		AllowOverride All
+		Require all granted
+	</Directory>
+</VirtualHost>

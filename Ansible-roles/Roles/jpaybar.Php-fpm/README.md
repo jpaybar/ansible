@@ -1,7 +1,21 @@
 jpaybar.Php-fpm
 =========
 
-This role installs PHP-Fpm on `Ubuntu` (18.04, 20.04, 22.04), `Debian` (10, 11) and `CentOS` (7.9, 8.5) distributions.
+This role installs PHP-Fpm on `Ubuntu` (18.04, 20.04, 22.04, 24.04), `Debian` (10, 11) and `CentOS` (7.9, 8.5) distributions.
+
+| Ubuntu | PHP version |
+| ------ | ----------- |
+| 18.04  | 7.2         |
+| 20.04  | 7.4         |
+| 22.04  | 8.1         |
+| 24.04  | 8.3         |
+
+Tested with
+-----------
+
+| ansible-core | Python |
+| ------------ | ------ |
+| 2.20.3       | 3.12   |
 
 Requirements
 ------------
@@ -73,8 +87,8 @@ BSD
 Author Information
 ------------------
 
-Juan Manuel Payán Barea    (IT Technician)   [st4rt.fr0m.scr4tch@gmail.com](mailto:st4rt.fr0m.scr4tch@gmail.com)
+Juan Manuel Payán Barea    (Systems Administrator | SysOps | IT Infrastructure)    st4rt.fr0m.scr4tch@gmail.com
 
-[jpaybar (Juan M. Payán Barea) · GitHub](https://github.com/jpaybar)
+https://github.com/jpaybar
 
 https://es.linkedin.com/in/juanmanuelpayan

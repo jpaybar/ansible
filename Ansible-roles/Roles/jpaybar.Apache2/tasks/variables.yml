@@ -3,5 +3,5 @@
 - name: Include OS-specific variables.
   include_vars: "{{ item }}"
   with_items:
-    - "{{ ansible_distribution }}_vars.yml"
-    #- "{{ ansible_distribution }}_config.yml"
+    - "{{ ansible_facts['distribution'] | lower }}_vars.yml"
+    #- "{{ ansible_facts['distribution'] | lower }}_config.yml"
