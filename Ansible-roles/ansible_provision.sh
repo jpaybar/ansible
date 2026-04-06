@@ -7,6 +7,11 @@
 # Asegurar que ~/.ssh/config tiene las entradas para las redes OpenStack
 SSH_CONFIG="$HOME/.ssh/config"
 
+if [ ! -f "$SSH_CONFIG" ]; then
+    touch "$SSH_CONFIG"
+    chmod 600 "$SSH_CONFIG"
+fi
+
 declare -A SSH_HOSTS=(
     ["172.20.0.*"]=""
     ["192.168.1.*"]=""
