@@ -1,0 +1,85 @@
+# ==============================================================================
+# AAP 2.4 - Inventario de instalación multi-nodo
+# ==============================================================================
+# NOTAS PREVIAS:
+#   - El hostname NO puede ser "localhost"  hostnamectl hostname rhaap-controller
+#   - Si falla por RAM mínima, editar:
+#     collections/ansible_collections/ansible/automation_platform_installer/roles/preflight/defaults/main.yml
+#   - Si error "dnf-command(config-manager)"  export LANG=C.UTF-8
+#   - Las variables se leen desde el fichero .env en el directorio de trabajo
+# ==============================================================================
+
+# Nodo principal: UI web, API REST y scheduler de jobs
+# En AAP 2.4 el controller incluye su propia UI — no requiere gateway separado
+[automationcontroller]
+controller ansible_host=192.168.122.101
+
+# El controller inicia el peering hacia los execution nodes en la malla receptor
+[automationcontroller:vars]
+peers=execution_nodes
+
+# Nodos dedicados a ejecutar los jobs (desacoplados del controller)
+[execution_nodes]
+execution ansible_host=192.168.122.102
+
+# Nodo PostgreSQL externo (gestionado por el propio installer)
+[database]
+database ansible_host=192.168.122.103
+
+# Motor de automatización reactiva, dispara jobs ante eventos externos (webhooks, Kafka, alertas...), requiere una máquina independiente
+#[automationeda]
+
+# Repositorio privado de colecciones Ansible y Execution Environments, requiere una máquina independiente
+#[automationhub]
+
+[all:vars]
+# Usuario SSH con el que el installer accede a todos los nodos
+ansible_user=root
+
+# Contraseña del usuario "admin" para entrar en la UI web
+admin_password=${ADMIN_PASSWORD}
+
+# Host del servidor PostgreSQL
+pg_host=192.168.122.103
+
+# Puerto de PostgreSQL
+pg_port=5432
+
+# Nombre de la base de datos
+pg_database='awx'
+
+# Usuario de PostgreSQL
+pg_username='awx'
+
+# Contraseña del usuario de PostgreSQL
+pg_password=${PG_PASSWORD}
+
+# Modo SSL para la conexión a PostgreSQL ('prefer', 'require', 'verify-full')
+pg_sslmode='prefer'
+
+# URL del registro de contenedores de Red Hat (necesario para descargar EEs)
+registry_url='registry.redhat.io'
+
+# Usuario del portal Red Hat (subscription-manager / access.redhat.com)
+registry_username=${RH_USERNAME}
+
+# Contraseña del portal Red Hat
+registry_password=${RH_PASSWORD}
+
+# Certificado SSL personalizado para la UI/API (opcional)
+# web_server_ssl_cert=/path/to/tower.cert
+
+# Clave privada del certificado SSL de la UI/API (opcional)
+# web_server_ssl_key=/path/to/tower.key
+
+# CA personalizada a instalar en el trust store del sistema (opcional)
+# custom_ca_cert=/path/to/ca.crt
+
+# Habilitar SSL en PostgreSQL cuando lo instala el propio installer (opcional)
+# postgres_use_ssl=False
+
+# Certificado SSL para PostgreSQL (opcional)
+# postgres_ssl_cert=/path/to/pgsql.crt
+
+# Clave privada SSL para PostgreSQL (opcional)
+# postgres_ssl_key=/path/to/pgsql.key
