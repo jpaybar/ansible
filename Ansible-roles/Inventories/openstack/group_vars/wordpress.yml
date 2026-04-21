@@ -1,0 +1,3 @@
+---
+wp_db_host: "{{ hostvars[groups['dbservers'][0]]['ansible_host'] }}"
+proxy_server: "{{ hostvars[groups['proxy'][0]]['ansible_host'] }}"

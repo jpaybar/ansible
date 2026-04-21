@@ -1,0 +1,5 @@
+---
+ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+mysql_db_name: "wordpress"
+mysql_user_name: "test"
+mysql_user_password: "test"
