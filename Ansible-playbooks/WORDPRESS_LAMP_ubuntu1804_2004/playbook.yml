@@ -9,6 +9,8 @@
     ###Fichero de definición de variables para nuestro playbook
 
   tasks:
+    - include: tasks/pre_checks.yml
+
     - name: Install prerequisites
       apt: name=aptitude update_cache=yes state=latest force_apt_get=yes
       tags: [ system ]

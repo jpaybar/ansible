@@ -1,0 +1,14 @@
+- name: Verify target OS is Ubuntu
+  fail:
+    msg: "Este playbook requiere Ubuntu"
+  when: ansible_distribution != "Ubuntu"
+
+- name: Verify minimum RAM (2GB required)
+  fail:
+    msg: "Se requieren al menos 2GB de RAM para el stack LAMP con MySQL"
+  when: ansible_memtotal_mb < 2048
+
+- name: Verify minimum disk space (10GB required)
+  fail:
+    msg: "Se requieren al menos 10GB de disco libre"
+  when: ansible_mounts | selectattr('mount', 'equalto', '/') | map(attribute='size_available') | first < 10737418240
