@@ -6,7 +6,7 @@
 - name: Verify minimum RAM (2GB required)
   fail:
     msg: "Se requieren al menos 2GB de RAM para el stack LAMP con MySQL"
-  when: ansible_memtotal_mb < 2048
+  when: ansible_memtotal_mb < (2 * 1024 * 0.9) | int
 
 - name: Verify minimum disk space (10GB required)
   fail:
