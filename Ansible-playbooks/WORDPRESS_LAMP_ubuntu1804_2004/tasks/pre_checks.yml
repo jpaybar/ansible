@@ -11,4 +11,4 @@
 - name: Verify minimum disk space (10GB required)
   fail:
     msg: "Se requieren al menos 10GB de disco libre"
-  when: ansible_mounts | selectattr('mount', 'equalto', '/') | map(attribute='size_available') | first < 10737418240
+  when: ansible_mounts | selectattr('mount', 'equalto', '/') | map(attribute='size_available') | first < (10 * 1024 * 1024 * 1024 * 0.9) | int
