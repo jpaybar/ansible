@@ -73,7 +73,16 @@
       mysql_user:
         name: root
         password: "{{ mysql_root_password }}"
-        login_unix_socket: /var/run/mysqld/mysqld.sock ###Ruta al socket en sistemas Unix para conexiones locales.
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+      ignore_errors: yes
+      tags: [ mysql, mysql-root ]
+
+    - name: Set the root password (if already has password)
+      mysql_user:
+        name: root
+        password: "{{ mysql_root_password }}"
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
       tags: [ mysql, mysql-root ]
 
     - name: Remove all anonymous user accounts
