@@ -1,7 +1,7 @@
 jpaybar.Wordpress
 =========
 
-This role installs WordPress on `Ubuntu` (18.04, 20.04, 22.04, 24.04), `Debian` (10, 11) and `CentOS` (7.9, 8.5) distributions.
+This role installs WordPress on `Ubuntu` (18.04, 20.04, 22.04, 24.04) distribution.
 
 WordPress version is installed from the official source:
 
@@ -9,13 +9,13 @@ WordPress version is installed from the official source:
 | --------- | ------- |
 | WordPress | latest  |
 
-Tested with
+## Tested with
 
 | ansible-core | Python |
 | ------------ | ------ |
 | 2.20.3       | 3.12   |
 
-Requirements
+## Requirements
 
 No requirements needed. Just keep in mind that this role does NOT install or configure the web server, PHP or database.
 
@@ -25,7 +25,7 @@ You must have a working environment with:
 - PHP (with required modules)
 - MySQL/MariaDB database
 
-Role Variables
+## Role Variables
 
 Default variables are defined in `defaults/main.yml`:
 
@@ -44,11 +44,11 @@ wordpress_owner: www-data
 wordpress_group: www-data
 ```
 
-License
+## License
 
 BSD
 
-Author Information
+## Author Information
 
 Juan Manuel Payán Barea (Systems Administrator | SysOps | IT Infrastructure) [st4rt.fr0m.scr4tch@gmail.com](mailto:st4rt.fr0m.scr4tch@gmail.com)
 

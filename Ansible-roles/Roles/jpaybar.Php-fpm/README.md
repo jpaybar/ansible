@@ -1,7 +1,7 @@
 jpaybar.Php-fpm
 =========
 
-This role installs PHP-Fpm on `Ubuntu` (18.04, 20.04, 22.04, 24.04), `Debian` (10, 11) and `CentOS` (7.9, 8.5) distributions.
+This role installs PHP-Fpm on `Ubuntu` (18.04, 20.04, 22.04, 24.04) distribution.
 
 | Ubuntu | PHP version |
 | ------ | ----------- |
@@ -20,7 +20,7 @@ Tested with
 Requirements
 ------------
 
-No requirements needed. Just keep in mind that `Centos 7.9` requires `python 2` to run the playbook. I added `ansible_python_interpreter: "/usr/bin/python2"` variable to the inventory for it.
+No requirements needed. 
 
 Role Variables
 --------------

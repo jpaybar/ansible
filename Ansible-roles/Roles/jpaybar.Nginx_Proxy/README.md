@@ -1,31 +1,102 @@
-Role Name
+jpaybar.Nginx_Proxy
 =========
 
-A brief description of the role goes here.
+This role installs and configures Nginx as a **reverse proxy with SSL** on `Ubuntu` (18.04, 20.04, 22.04, 24.04) distributions.
+
+It generates a self-signed SSL certificate, configures HTTP to HTTPS redirection, and proxies HTTPS traffic to a backend application server (WordPress over Apache/PHP-FPM).
+
+Tested with
+-----------
+
+| ansible-core | Python |
+| ------------ | ------ |
+| 2.20.3       | 3.12   |
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+No requirements needed.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Variables are defined in `defaults/main.yml`:
+
+| Variable          | Default                    | Description                                                             |
+| ----------------- | -------------------------- | ----------------------------------------------------------------------- |
+| `proxy_hostname`  | `{{ inventory_hostname }}` | Hostname of the proxy server (used in SSL certificate and Nginx config) |
+| `app_server_port` | `443`                      | Port where the backend application server listens                       |
+
+The variable `app_server_ip` must be defined in the inventory or `group_vars` — it points to the backend WordPress application server.
+
+Example:
+
+```yaml
+# group_vars/proxy.yml
+proxy_hostname: "server1"
+app_server_port: 443
+app_server_ip: "192.168.122.x"
+```
+
+What this role does
+-------------------
+
+- Installs `nginx` and `openssl`
+- Creates `/etc/nginx/ssl/` directory
+- Generates a **self-signed SSL certificate** valid for 365 days (`nginx.crt` / `nginx.key`)
+- Deploys the Nginx virtualhost configuration from template `wordpress_proxy.conf.j2`:
+  - Redirects all HTTP traffic (port 80) to HTTPS (port 443)
+  - Proxies HTTPS requests to the backend application server
+  - Disables SSL verification on the backend connection (self-signed cert on app server)
+  - Sets standard proxy headers: `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`
+- Enables the site and removes the default Nginx site
+- Ensures Nginx is started and enabled at boot
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+This role is designed to work as part of the **WordPress 3-Tier** stack:
 
-Example Playbook
-----------------
+- Backend app server must be running Apache2 + PHP-FPM + WordPress (`jpaybar.Apache2`, `jpaybar.Php-fpm`, `jpaybar.Wordpress`)
+- `app_server_ip` must be reachable from the proxy server
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Run this Playbook
+-----------------
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+A quick start:
+
+```bash
+git clone https://github.com/jpaybar/ansible.git
+cd ansible/Ansible-roles
+```
+
+Once you have cloned the repository, run the role this way:
+
+```bash
+ansible-playbook -i Inventories/kvm/hosts.yml Playbooks/nginx-proxy_role_playbook.yml
+```
+
+or with user/password authentication:
+
+```bash
+ansible-playbook -i Inventories/kvm/hosts.yml Playbooks/nginx-proxy_role_playbook.yml -u user -k
+```
+
+This is the playbook:
+
+```yaml
+---
+- hosts: proxy
+  become: true
+  roles:
+    - ../Roles/jpaybar.Nginx_Proxy
+```
+
+To run the full WordPress 3-Tier stack:
+
+```bash
+ansible-playbook -i Inventories/kvm/hosts.yml Playbooks/site.yml
+```
 
 License
 -------
@@ -35,4 +106,8 @@ BSD
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+Juan Manuel Payán Barea    (Systems Administrator | SysOps | IT Infrastructure)    st4rt.fr0m.scr4tch@gmail.com
+
+https://github.com/jpaybar
+
+https://es.linkedin.com/in/juanmanuelpayan
