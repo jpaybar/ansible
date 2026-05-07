@@ -1,0 +1,226 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for jpaybar.Common
+# Valores por defecto del rol. Sobrescribe estas variables en group_vars,
+# host_vars o pasándolas directamente al rol desde el playbook.
+
+# =============================================================================
+# repos.yml
+# =============================================================================
+
+# --- Modo 1: Registro con Red Hat (subscription-manager) ---
+# Útil cuando el servidor no fue provisionado con el script de bash
+# o cuando se aplica el rol a servidores físicos o VMs existentes.
+# Si el script ya registró la VM, dejar en false.
+common_rhsm_enabled: false
+common_rhsm_username: ""
+common_rhsm_password: ""  # Usar ansible-vault para cifrar este valor
+
+# --- Modo 2: Repositorio local adicional ---
+# Útil en entornos air-gapped, con Satellite, Nexus o Gitlab interno.
+# Compatible con Modo 1 — se pueden usar ambos simultáneamente.
+# Si es false, el rol no toca la configuración de repos.
+common_local_repo_enabled: false
+
+# Nombre del fichero .repo que se creará en /etc/yum.repos.d/
+common_local_repo_name: "local"
+
+# Nombre descriptivo del repositorio
+common_local_repo_description: "Repositorio local"
+
+# URL base del repositorio BaseOS
+# Ejemplos:
+#   http://nexus.empresa.local/repository/rhel8-baseos/
+#   file:///mnt/repos/rhel8/baseos
+common_local_repo_baseos_baseurl: "http://repo.local/rhel/baseos"
+
+# URL base del repositorio AppStream
+# Ejemplos:
+#   http://nexus.empresa.local/repository/rhel8-appstream/
+#   file:///mnt/repos/rhel8/appstream
+common_local_repo_appstream_baseurl: "http://repo.local/rhel/appstream"
+
+# GPG check — deshabilitar si el repo local no tiene firma GPG
+common_local_repo_gpgcheck: false
+
+# Ruta a la clave GPG — solo aplica si common_local_repo_gpgcheck: true
+# Ejemplos:
+#   file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+#   http://repo.local/RPM-GPG-KEY
+common_local_repo_gpgkey: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+
+# Tiempo de expiración de metadatos del repo
+# -1 → nunca expira, recomendado para repos locales estáticos
+#  0 → siempre refresca al ejecutar dnf
+common_local_repo_metadata_expire: "-1"
+
+# Coste del repo — prioridad frente a otros repos (menor coste = mayor prioridad)
+# 500 es el valor por defecto de dnf
+common_local_repo_cost: 500
+
+# --- Modo 3: No tocar repos ---
+# Ambos false — el rol asume que los repos ya están configurados.
+# Es el comportamiento por defecto cuando el script de bash
+# ha registrado la VM con Red Hat en el primer arranque.
+
+# =============================================================================
+# packages.yml
+# =============================================================================
+
+# Lista de paquetes base a instalar en todos los servidores
+common_packages:
+  - vim
+  - curl
+  - wget
+  - tar
+  - unzip
+  - net-tools
+  - bind-utils
+  - chrony
+  - bash-completion
+  - policycoreutils-python-utils  # herramientas SELinux (semanage, etc.)
+  - lsof                          # diagnóstico de ficheros abiertos y puertos
+  - tcpdump                       # captura de tráfico de red
+  - rsync                         # transferencia eficiente de ficheros
+  - tmux                          # sesiones persistentes de terminal
+
+# Estado deseado de los paquetes (present, latest, absent)
+common_packages_state: present
+
+# =============================================================================
+# timezone.yml
+# =============================================================================
+
+# Zona horaria del servidor
+# Ejemplos: Europe/Madrid, UTC, America/New_York
+common_timezone: "Europe/Madrid"
+
+# =============================================================================
+# ntp.yml
+# =============================================================================
+
+# Lista de servidores NTP
+# Por defecto los servidores oficiales de Red Hat para RHEL
+# En entornos corporativos sustituir por el NTP interno
+common_ntp_servers:
+  - 0.rhel.pool.ntp.org
+  - 1.rhel.pool.ntp.org
+  - 2.rhel.pool.ntp.org
+
+# Habilitar y arrancar el servicio chrony
+common_ntp_service_enabled: true
+common_ntp_service_state: started
+
+# =============================================================================
+# selinux.yml
+# =============================================================================
+
+# Estado de SELinux: enforcing, permissive, disabled
+# enforcing  → producción, bloquea accesos no permitidos por la política
+# permissive → debug, registra pero no bloquea
+# disabled   → desactivado (requiere reinicio para volver a activar)
+# En producción siempre enforcing — cambiar solo si hay razón justificada
+common_selinux_state: enforcing
+
+# Política SELinux
+# targeted → estándar RHEL, protege servicios críticos del sistema
+# mls      → multinivel, entornos militares/gubernamentales, muy complejo
+common_selinux_policy: targeted
+
+# =============================================================================
+# hosts.yml
+# =============================================================================
+
+# Si true, añade automáticamente al /etc/hosts todos los hosts
+# del inventario con su IP y FQDN usando ansible_play_hosts y hostvars
+# No requiere lista manual — lee los datos del propio inventario de Ansible
+# Resultado: 192.168.122.150 rhel8 rhel8.lab.local
+common_manage_hosts: true
+
+# Dominio local para construir el FQDN de cada nodo
+common_hosts_domain: "lab.local"
+
+# Lista adicional de hosts fijos fuera del inventario
+# Para equipos de infraestructura: NTP, NAS, Satellite, bastion, etc.
+common_extra_hosts: []
+# Ejemplo:
+# common_extra_hosts:
+#   - name: satellite
+#     ip: 192.168.1.10
+#     fqdn: satellite.lab.local
+#   - name: nas
+#     ip: 192.168.1.20
+#     fqdn: nas.lab.local
+
+# =============================================================================
+# users.yml
+# =============================================================================
+
+# Lista de usuarios base a crear en todos los servidores
+# La clave pública SSH se lee de files/public_keys/<nombre>.pub
+# Las claves públicas no son secretas y se pueden subir a Git
+#
+# Para creación masiva de usuarios (bulk) usar un playbook independiente
+# con fichero CSV + ansible-vault para passwords
+common_users: []
+# Ejemplo:
+# common_users:
+#   - name: sysadmin
+#     groups: wheel
+#     shell: /bin/bash
+#     ssh_key: "{{ lookup('file', 'files/public_keys/sysadmin.pub') }}"
+#     state: present
+#     remove: true
+#   - name: developer
+#     groups: ""
+#     shell: /bin/bash
+#     ssh_key: "{{ lookup('file', 'files/public_keys/developer.pub') }}"
+#     state: present
+#     remove: true
+
+# =============================================================================
+# sudoers.yml
+# =============================================================================
+
+# Lista de entradas sudoers
+# Cada entrada genera un fichero en /etc/sudoers.d/
+# Definir siempre después de common_users
+common_sudoers: []
+# Ejemplo:
+# common_sudoers:
+#   - name: sysadmin
+#     user: sysadmin
+#     commands: ALL
+#     nopasswd: true
+#   - name: developer
+#     user: developer
+#     commands: /usr/bin/systemctl restart myapp
+#     nopasswd: true
+
+# =============================================================================
+# nfs.yml
+# =============================================================================
+
+# Habilitar montajes NFS (cliente)
+# Si es false, el rol no instala nfs-utils ni toca /etc/fstab
+common_nfs_enabled: false
+
+# Paquete cliente NFS necesario para montar shares
+common_nfs_package: nfs-utils
+
+# Lista de montajes NFS
+# state: mounted   → monta ahora y persiste en /etc/fstab
+# state: present   → solo escribe en /etc/fstab, no monta
+# state: unmounted → desmonta pero mantiene en /etc/fstab
+# state: absent    → desmonta y elimina de /etc/fstab
+common_nfs_mounts: []
+# Ejemplo:
+# common_nfs_mounts:
+#   - src: "192.168.1.100:/exports/data"
+#     path: /mnt/data
+#     opts: "rw,sync,hard,intr"
+#     state: mounted
+#   - src: "192.168.1.100:/exports/backup"
+#     path: /mnt/backup
+#     opts: "ro,sync"
+#     state: mounted

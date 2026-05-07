@@ -1,0 +1,51 @@
+---
+# tasks/selinux.yml — jpaybar.Common
+# Configuración del estado y política de SELinux
+# Estado y política se definen en defaults/main.yml → common_selinux_state
+# IMPORTANTE: cambiar de disabled a enforcing/permissive requiere reinicio
+# El módulo ansible.posix.selinux gestiona el reinicio automáticamente
+
+# =============================================================================
+# Configuración de SELinux
+# =============================================================================
+
+- name: Configurar estado y política SELinux (RHEL 8)
+  ansible.builtin.command:
+    cmd: "setenforce {{ '1' if common_selinux_state == 'enforcing' else '0' }}"
+  register: selinux_result
+  changed_when: false
+  when: ansible_facts['distribution_major_version'] == '8'
+
+- name: Configurar fichero /etc/selinux/config (RHEL 8)
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: "SELINUX={{ common_selinux_state }}"
+  when: ansible_facts['distribution_major_version'] == '8'
+
+- name: Configurar estado y política SELinux (RHEL 9)
+  ansible.posix.selinux:
+    state: "{{ common_selinux_state }}"
+    policy: "{{ common_selinux_policy }}"
+  register: selinux_result
+  when: ansible_facts['distribution_major_version'] == '9'
+
+- name: Avisar si se requiere reinicio para aplicar cambios SELinux
+  ansible.builtin.debug:
+    msg: >
+      ATENCIÓN: El cambio de estado SELinux requiere reinicio del servidor
+      para aplicarse completamente.
+  when: selinux_result.reboot_required | default(false)
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+- name: Verificar estado SELinux activo
+  ansible.builtin.command: getenforce
+  register: selinux_check
+  changed_when: false
+
+- name: Mostrar estado SELinux activo
+  ansible.builtin.debug:
+    msg: "Estado SELinux: {{ selinux_check.stdout }}"

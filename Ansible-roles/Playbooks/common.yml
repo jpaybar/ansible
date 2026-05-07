@@ -1,0 +1,19 @@
+---
+# common.yml — Playbook para el rol jpaybar.Common
+# Aplica la configuración base a todos los servidores RHEL del grupo 'rhel'
+#
+# Uso:
+#   ansible-playbook common.yml -i Inventories/kvm/hosts.yml
+#   ansible-playbook common.yml -i Inventories/kvm/hosts.yml --limit rhel8
+#   ansible-playbook common.yml -i Inventories/kvm/hosts.yml --tags ntp,timezone
+#
+# Variables:
+#   Sobrescribir los defaults del rol en Inventories/kvm/group_vars/rhel.yml
+
+- name: Configuración base de servidores RHEL
+  hosts: rhel
+  become: true
+  gather_facts: true
+
+  roles:
+    - ../Roles/jpaybar.Common

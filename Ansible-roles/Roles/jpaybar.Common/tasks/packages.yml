@@ -1,0 +1,29 @@
+---
+# tasks/packages.yml — jpaybar.Common
+# Instalación de paquetes base en todos los servidores RHEL
+# La lista de paquetes se define en defaults/main.yml → common_packages
+
+# =============================================================================
+# Instalación de paquetes base
+# =============================================================================
+
+- name: Instalar paquetes base (RHEL 8)
+  ansible.builtin.command:
+    cmd: "dnf install -y {{ common_packages | join(' ') }}"
+  register: packages_result
+  changed_when: >
+   'Nothing to do' not in packages_result.stdout and
+   'Nada por hacer' not in packages_result.stdout
+  when: ansible_facts['distribution_major_version'] == '8'
+
+- name: Instalar paquetes base (RHEL 9)
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: "{{ common_packages_state }}"
+  register: packages_result
+  when: ansible_facts['distribution_major_version'] == '9'
+
+- name: Mostrar paquetes instalados
+  ansible.builtin.debug:
+    msg: "Paquetes instalados correctamente"
+  when: packages_result.changed

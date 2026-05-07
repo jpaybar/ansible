@@ -1,0 +1,110 @@
+---
+# group_vars/rhel/vars.yml
+# Variables específicas del grupo 'rhel' para el rol jpaybar.Common
+# Sobrescriben los valores por defecto de defaults/main.yml
+# Este fichero va a Git — no incluir credenciales aquí
+# Las credenciales van en group_vars/rhel/vault.yml cifrado con ansible-vault
+
+# =============================================================================
+# repos.yml
+# =============================================================================
+
+# Modo 1: Registro con Red Hat (subscription-manager)
+# - Si las VMs se crean con el script create_rhel_target_vms.sh
+#   el registro se hace automáticamente via cloud-init — dejar en false
+# - Si se aplica el rol a servidores existentes (físicos, VMs sin script)
+#   cambiar a true y configurar las credenciales en vault.yml
+common_rhsm_enabled: false
+
+# Descomentar cuando vault.yml esté cifrado y configurado
+# common_rhsm_username: "{{ vault_rhsm_username }}"
+# common_rhsm_password: "{{ vault_rhsm_password }}"
+
+# Modo 2: No usamos repo local en el lab — usamos repos de Red Hat
+common_local_repo_enabled: false
+
+# =============================================================================
+# packages.yml
+# =============================================================================
+
+# Usamos la lista por defecto de defaults/main.yml
+# Añadir aquí paquetes adicionales específicos del lab si fuera necesario
+# common_packages:
+#   - paquete_adicional
+
+# =============================================================================
+# timezone.yml
+# =============================================================================
+
+common_timezone: "Europe/Madrid"
+
+# =============================================================================
+# ntp.yml
+# =============================================================================
+
+# Servidores NTP oficiales de Red Hat — válidos para el lab
+common_ntp_servers:
+  - 0.rhel.pool.ntp.org
+  - 1.rhel.pool.ntp.org
+  - 2.rhel.pool.ntp.org
+
+# =============================================================================
+# selinux.yml
+# =============================================================================
+
+# enforcing en el lab para validar que el rol funciona correctamente
+# con SELinux activo — igual que en producción
+common_selinux_state: enforcing
+common_selinux_policy: targeted
+
+# =============================================================================
+# hosts.yml
+# =============================================================================
+
+common_manage_hosts: true
+common_hosts_domain: "lab.local"
+
+# Hosts fijos de infraestructura del lab
+# Añadir aquí equipos que no están en el inventario pero deben estar en /etc/hosts
+common_extra_hosts: []
+
+# =============================================================================
+# users.yml
+# =============================================================================
+
+# Usuarios base del lab
+# Las claves públicas van en files/public_keys/
+common_users:
+  - name: sysadmin
+    groups: wheel
+    shell: /bin/bash
+    ssh_key: "{{ lookup('file', 'files/public_keys/sysadmin.pub') }}"
+    state: present
+    remove: false
+  - name: developer
+    groups: ""
+    shell: /bin/bash
+    ssh_key: "{{ lookup('file', 'files/public_keys/developer.pub') }}"
+    state: present
+    remove: false
+
+# =============================================================================
+# sudoers.yml
+# =============================================================================
+
+common_sudoers:
+  - name: sysadmin
+    user: sysadmin
+    commands: ALL
+    nopasswd: true
+  - name: developer
+    user: developer
+    commands: /usr/bin/systemctl restart httpd, /usr/bin/systemctl restart nginx
+    nopasswd: false
+
+# =============================================================================
+# nfs.yml
+# =============================================================================
+
+# NFS deshabilitado en el lab — no hay servidor NFS disponible
+common_nfs_enabled: false

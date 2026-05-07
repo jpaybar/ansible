@@ -1,0 +1,62 @@
+---
+# tasks/sudoers.yml — jpaybar.Common
+# Gestión de permisos sudo por usuario
+# Las entradas se definen en defaults/main.yml → common_sudoers
+# Cada entrada genera un fichero independiente en /etc/sudoers.d/
+# NUNCA se modifica /etc/sudoers directamente
+
+# =============================================================================
+# Validación de sintaxis sudoers
+# =============================================================================
+
+- name: Asegurar que /etc/sudoers.d está incluido en /etc/sudoers
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "#includedir /etc/sudoers.d"
+    state: present
+    validate: /usr/sbin/visudo -cf %s
+
+# =============================================================================
+# Gestión de entradas sudoers
+# =============================================================================
+
+- name: Desplegar entradas sudoers por usuario
+  ansible.builtin.template:
+    src: sudoers_entry.j2
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ common_sudoers }}"
+  when: common_sudoers | length > 0
+
+- name: Eliminar entradas sudoers ausentes
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/{{ item.name }}"
+    state: absent
+  loop: "{{ common_sudoers }}"
+  when:
+    - common_sudoers | length > 0
+    - item.state | default('present') == 'absent'
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+- name: Verificar permisos sudo de cada usuario
+  ansible.builtin.command: "sudo -l -U {{ item.name }}"
+  register: sudo_check
+  changed_when: false
+  loop: "{{ common_sudoers }}"
+  when:
+    - common_sudoers | length > 0
+    - item.state | default('present') == 'present'
+
+- name: Mostrar permisos sudo
+  ansible.builtin.debug:
+    msg: "{{ item.stdout_lines }}"
+  loop: "{{ sudo_check.results | default([]) }}"
+  when:
+    - common_sudoers | length > 0
+    - item.stdout_lines is defined

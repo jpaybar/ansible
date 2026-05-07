@@ -1,0 +1,33 @@
+# {{ ansible_managed }}
+# {{ common_local_repo_name }}.repo — Gestionado por Ansible (rol jpaybar.Common)
+# NO modificar manualmente — los cambios se sobreescribirán en el próximo play
+
+# =============================================================================
+# BaseOS — Paquetes base del sistema operativo
+# =============================================================================
+
+[{{ common_local_repo_name }}-baseos]
+name={{ common_local_repo_description }} - BaseOS
+baseurl={{ common_local_repo_baseos_baseurl }}
+enabled=1
+gpgcheck={{ 1 if common_local_repo_gpgcheck else 0 }}
+{% if common_local_repo_gpgcheck %}
+gpgkey={{ common_local_repo_gpgkey }}
+{% endif %}
+metadata_expire={{ common_local_repo_metadata_expire }}
+cost={{ common_local_repo_cost }}
+
+# =============================================================================
+# AppStream — Módulos y paquetes de aplicaciones
+# =============================================================================
+
+[{{ common_local_repo_name }}-appstream]
+name={{ common_local_repo_description }} - AppStream
+baseurl={{ common_local_repo_appstream_baseurl }}
+enabled=1
+gpgcheck={{ 1 if common_local_repo_gpgcheck else 0 }}
+{% if common_local_repo_gpgcheck %}
+gpgkey={{ common_local_repo_gpgkey }}
+{% endif %}
+metadata_expire={{ common_local_repo_metadata_expire }}
+cost={{ common_local_repo_cost }}

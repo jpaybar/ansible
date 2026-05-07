@@ -1,0 +1,7 @@
+---
+# vault.yml — Cifrar este fichero con ansible-vault antes de usar
+# ansible-vault encrypt group_vars/rhel/vault.yml
+#
+# Contenido:
+# vault_rhsm_username: "tu_usuario@redhat.com"
+# vault_rhsm_password: "tu_password"

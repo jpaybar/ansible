@@ -1,0 +1,21 @@
+---
+# tasks/timezone.yml — jpaybar.Common
+# Configuración de zona horaria del servidor
+# La zona horaria se define en defaults/main.yml → common_timezone
+
+# =============================================================================
+# Configuración de zona horaria
+# =============================================================================
+
+- name: Configurar zona horaria
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+
+- name: Verificar zona horaria aplicada
+  ansible.builtin.command: timedatectl show --property=Timezone --value
+  register: timezone_check
+  changed_when: false
+
+- name: Mostrar zona horaria activa
+  ansible.builtin.debug:
+    msg: "Zona horaria configurada: {{ timezone_check.stdout }}"

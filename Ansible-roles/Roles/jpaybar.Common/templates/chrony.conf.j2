@@ -1,0 +1,41 @@
+# {{ ansible_managed }}
+# chrony.conf — Gestionado por Ansible (rol jpaybar.Common)
+# NO modificar manualmente — los cambios se sobreescribirán en el próximo play
+
+# =============================================================================
+# Servidores NTP
+# Definidos en defaults/main.yml → common_ntp_servers
+# Sobrescribir en group_vars o host_vars para usar NTP corporativo interno
+# =============================================================================
+
+{% for server in common_ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+
+# =============================================================================
+# Configuración general
+# =============================================================================
+
+# Permitir al daemon ajustar el reloj en saltos grandes al arrancar
+# Útil cuando el servidor lleva tiempo apagado
+makestep 1.0 3
+
+# Activar tracking de hardware del reloj (RTC)
+rtcsync
+
+# Fichero de deriva del reloj — almacena la frecuencia de corrección
+driftfile /var/lib/chrony/drift
+
+# Directorio de claves de autenticación NTP
+keyfile /etc/chrony.keys
+
+# Directorio de log
+logdir /var/log/chrony
+
+# Nivel mínimo de selección de fuente NTP
+# -2 → cualquier fuente disponible aunque sea de baja calidad
+minsources 1
+
+# Permitir consultas NTP solo desde localhost (no actúa como servidor NTP)
+# Para habilitar como servidor NTP descomentar y ajustar la subred
+# allow 192.168.0.0/16

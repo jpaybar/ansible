@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Gestionado por Ansible (rol jpaybar.Common)
+# NO modificar manualmente — los cambios se sobreescribirán en el próximo play
+
+# Entrada sudoers para el usuario {{ item.user }}
+{{ item.user }} ALL=(ALL) {{ 'NOPASSWD: ' if item.nopasswd else '' }}{{ item.commands }}

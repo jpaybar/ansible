@@ -1,0 +1,58 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for jpaybar.Common
+# Orquestador principal del rol. Valida el SO y llama a cada tarea en orden.
+
+# =============================================================================
+# Validación del sistema operativo
+# El rol solo soporta RHEL 8 y RHEL 9
+# =============================================================================
+
+- name: Verificar sistema operativo compatible
+  ansible.builtin.fail:
+    msg: >
+      Este rol solo soporta RHEL 8 y RHEL 9.
+      SO detectado: {{ ansible_distribution }} {{ ansible_distribution_major_version }}
+  when: >
+    ansible_facts['distribution'] != "RedHat" or
+    ansible_facts['distribution_major_version'] not in ["8", "9"]
+
+# =============================================================================
+# Tareas del rol — en orden de dependencia
+# =============================================================================
+
+- name: Configurar repositorios
+  ansible.builtin.include_tasks: repos.yml
+  tags: repos
+
+- name: Instalar paquetes base
+  ansible.builtin.include_tasks: packages.yml
+  tags: packages
+
+- name: Configurar zona horaria
+  ansible.builtin.include_tasks: timezone.yml
+  tags: timezone
+
+- name: Configurar NTP (chrony)
+  ansible.builtin.include_tasks: ntp.yml
+  tags: ntp
+
+- name: Configurar SELinux
+  ansible.builtin.include_tasks: selinux.yml
+  tags: selinux
+
+- name: Configurar /etc/hosts
+  ansible.builtin.include_tasks: hosts.yml
+  tags: hosts
+
+- name: Crear usuarios base
+  ansible.builtin.include_tasks: users.yml
+  tags: users
+
+- name: Configurar sudoers
+  ansible.builtin.include_tasks: sudoers.yml
+  tags: sudoers
+
+- name: Configurar montajes NFS
+  ansible.builtin.include_tasks: nfs.yml
+  tags: nfs

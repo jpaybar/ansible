@@ -1,0 +1,58 @@
+---
+# tasks/users.yml — jpaybar.Common
+# Creación de usuarios base en todos los servidores
+# Los usuarios se definen en defaults/main.yml → common_users
+# Las claves públicas SSH van en files/public_keys/<nombre>.pub
+# Para creación masiva de usuarios usar un playbook independiente con CSV + Vault
+
+# =============================================================================
+# Creación de usuarios
+# =============================================================================
+
+- name: Crear usuarios base
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups | default('') }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    state: "{{ item.state | default('present') }}"
+    remove: "{{ item.remove | default(false) }}"
+    create_home: true
+  loop: "{{ common_users }}"
+  when: common_users | length > 0
+
+# =============================================================================
+# Configuración de claves SSH
+# =============================================================================
+
+- name: Desplegar clave pública SSH de cada usuario
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+    state: present
+    exclusive: false
+  loop: "{{ common_users }}"
+  when:
+    - common_users | length > 0
+    - item.ssh_key is defined
+    - item.state | default('present') == 'present'
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+- name: Verificar usuarios creados
+  ansible.builtin.command: "id {{ item.name }}"
+  register: user_check
+  changed_when: false
+  loop: "{{ common_users }}"
+  when:
+    - common_users | length > 0
+    - item.state | default('present') == 'present'
+
+- name: Mostrar información de usuarios creados
+  ansible.builtin.debug:
+    msg: "{{ item.stdout }}"
+  loop: "{{ user_check.results | default([]) }}"
+  when:
+    - common_users | length > 0
+    - item.stdout is defined

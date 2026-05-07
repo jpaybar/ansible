@@ -1,0 +1,55 @@
+---
+# tasks/repos.yml — jpaybar.Common
+# Gestión de repositorios YUM/DNF
+# Modo 1: Registro con Red Hat via subscription-manager
+# Modo 2: Repositorio local adicional (air-gapped, Satellite, Nexus)
+# Modo 3: No tocar nada (ambos modos deshabilitados — comportamiento por defecto)
+
+# =============================================================================
+# Modo 1 — Registro con Red Hat (subscription-manager)
+# =============================================================================
+
+- name: Registrar sistema con Red Hat (subscription-manager)
+  community.general.redhat_subscription:
+    state: present
+    username: "{{ common_rhsm_username }}"
+    password: "{{ common_rhsm_password }}"
+    auto_attach: true
+  when: common_rhsm_enabled | bool
+  no_log: true  # Ocultar credenciales en el output del play
+
+- name: Verificar repositorios Red Hat activos
+  ansible.builtin.command: subscription-manager repos --list-enabled
+  register: rhsm_repos
+  changed_when: false
+  when: common_rhsm_enabled | bool
+
+- name: Mostrar repositorios Red Hat activos
+  ansible.builtin.debug:
+    var: rhsm_repos.stdout_lines
+  when: common_rhsm_enabled | bool
+
+# =============================================================================
+# Modo 2 — Repositorio local adicional
+# =============================================================================
+
+- name: Desplegar fichero de repositorio local
+  ansible.builtin.template:
+    src: local.repo.j2
+    dest: "/etc/yum.repos.d/{{ common_local_repo_name }}.repo"
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_local_repo_enabled | bool
+
+- name: Verificar repositorio local accesible
+  ansible.builtin.command: "dnf repoinfo {{ common_local_repo_name }}-baseos"
+  register: repo_check
+  changed_when: false
+  failed_when: repo_check.rc != 0
+  when: common_local_repo_enabled | bool
+
+- name: Mostrar información del repositorio local
+  ansible.builtin.debug:
+    var: repo_check.stdout_lines
+  when: common_local_repo_enabled | bool

@@ -1,0 +1,58 @@
+---
+# tasks/nfs.yml — jpaybar.Common
+# Configuración de montajes NFS como cliente
+# Los montajes se definen en defaults/main.yml → common_nfs_mounts
+# Si common_nfs_enabled: false el rol no toca nada de NFS
+
+# =============================================================================
+# Instalación del cliente NFS
+# =============================================================================
+
+- name: Instalar paquete cliente NFS
+  ansible.builtin.dnf:
+    name: "{{ common_nfs_package }}"
+    state: present
+  when: common_nfs_enabled | bool
+
+# =============================================================================
+# Habilitar y arrancar servicio NFS client
+# =============================================================================
+
+- name: Habilitar y arrancar servicio rpcbind
+  ansible.builtin.service:
+    name: rpcbind
+    enabled: true
+    state: started
+  when: common_nfs_enabled | bool
+
+# =============================================================================
+# Montajes NFS
+# =============================================================================
+
+- name: Configurar montajes NFS en /etc/fstab y montar
+  ansible.posix.mount:
+    src: "{{ item.src }}"
+    path: "{{ item.path }}"
+    fstype: nfs
+    opts: "{{ item.opts | default('rw,sync,hard,intr') }}"
+    state: "{{ item.state | default('mounted') }}"
+  loop: "{{ common_nfs_mounts }}"
+  when:
+    - common_nfs_enabled | bool
+    - common_nfs_mounts | length > 0
+  notify: remount nfs
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+- name: Verificar montajes NFS activos
+  ansible.builtin.command: mount -t nfs
+  register: nfs_mounts_check
+  changed_when: false
+  when: common_nfs_enabled | bool
+
+- name: Mostrar montajes NFS activos
+  ansible.builtin.debug:
+    var: nfs_mounts_check.stdout_lines
+  when: common_nfs_enabled | bool

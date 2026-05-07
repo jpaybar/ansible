@@ -1,0 +1,41 @@
+---
+# tasks/ntp.yml — jpaybar.Common
+# Configuración del servicio NTP mediante chrony
+# Los servidores NTP se definen en defaults/main.yml → common_ntp_servers
+# chrony debe estar instalado previamente — incluido en common_packages
+
+# =============================================================================
+# Configuración de chrony
+# =============================================================================
+
+- name: Desplegar configuración de chrony
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart chrony
+
+# =============================================================================
+# Estado del servicio chrony
+# =============================================================================
+
+- name: Asegurar servicio chrony habilitado y arrancado
+  ansible.builtin.service:
+    name: chronyd
+    enabled: "{{ common_ntp_service_enabled }}"
+    state: "{{ common_ntp_service_state }}"
+
+# =============================================================================
+# Verificación
+# =============================================================================
+
+- name: Verificar sincronización NTP
+  ansible.builtin.command: chronyc tracking
+  register: ntp_tracking
+  changed_when: false
+
+- name: Mostrar estado de sincronización NTP
+  ansible.builtin.debug:
+    var: ntp_tracking.stdout_lines
