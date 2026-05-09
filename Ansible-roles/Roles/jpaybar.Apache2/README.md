@@ -40,7 +40,7 @@ cd Ansible-roles/jpaybar.Apache2
 - hosts: webservers
   become: true
   roles:
-    - ../Roles/jpaybar.Apache2
+    - jpaybar.Apache2
 ```
 
 ## License

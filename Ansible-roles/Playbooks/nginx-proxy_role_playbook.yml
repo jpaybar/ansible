@@ -3,4 +3,4 @@
 - hosts: proxy
   become: true
   roles:
-    - ../Roles/jpaybar.Nginx_Proxy
+    - jpaybar.Nginx_Proxy

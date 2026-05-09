@@ -1,0 +1,66 @@
+---
+# Gestión de paquetes inseguros y política criptográfica
+
+- name: Comprobar política criptográfica actual
+  ansible.builtin.command: update-crypto-policies --show
+  register: current_crypto_policy
+  changed_when: false
+  check_mode: false
+
+- name: Aplicar política criptográfica DEFAULT (si no está ya activa)
+  ansible.builtin.command: update-crypto-policies --set {{ crypto_policy }}
+  when: current_crypto_policy.stdout.strip() != crypto_policy
+  notify: apply crypto policy
+
+- name: Comprobar si existe el directorio xinetd.d
+  ansible.builtin.stat:
+    path: /etc/xinetd.d
+  register: xinetd_stat
+  when: "'xinetd' in bad_packages"
+
+- name: Comprobar si xinetd tiene configuraciones activas
+  ansible.builtin.find:
+    paths: /etc/xinetd.d
+    file_type: file
+  register: xinetd_configs
+  when:
+    - "'xinetd' in bad_packages"
+    - xinetd_stat.stat.exists | default(false)
+    - xinetd_stat.stat.isdir | default(false)
+
+- name: Advertir si xinetd tiene configuraciones activas (no se elimina)
+  ansible.builtin.debug:
+    msg: >
+      xinetd tiene {{ xinetd_configs.files | default([]) | length }} fichero(s) en /etc/xinetd.d/.
+      Se omite su eliminación. Revisa manualmente.
+  when:
+    - "'xinetd' in bad_packages"
+    - xinetd_configs is defined
+    - xinetd_configs.files | default([]) | length > 0
+
+- name: Eliminar paquetes inseguros (RHEL 8)
+  ansible.builtin.command:
+    cmd: "dnf remove -y {{ item }}"
+  register: pkg_remove_rhel8
+  changed_when: >
+    'Nothing to do' not in pkg_remove_rhel8.stdout and
+    'Nada por hacer' not in pkg_remove_rhel8.stdout
+  loop: "{{ bad_packages }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '8'
+    - item != 'xinetd' or
+      (xinetd_configs is not defined) or
+      (xinetd_configs.files | default([]) | length == 0)
+  failed_when: false
+
+- name: Eliminar paquetes inseguros (RHEL 9)
+  ansible.builtin.dnf:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ bad_packages }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '9'
+    - item != 'xinetd' or
+      (xinetd_configs is not defined) or
+      (xinetd_configs.files | default([]) | length == 0)
+  failed_when: false

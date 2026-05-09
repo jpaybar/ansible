@@ -89,7 +89,7 @@ This is the playbook:
 - hosts: proxy
   become: true
   roles:
-    - ../Roles/jpaybar.Nginx_Proxy
+    - jpaybar.Nginx_Proxy
 ```
 
 To run the full WordPress 3-Tier stack:

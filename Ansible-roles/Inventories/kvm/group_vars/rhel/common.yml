@@ -1,9 +1,9 @@
 ---
-# group_vars/rhel/vars.yml
+# group_vars/rhel/common.yml
 # Variables específicas del grupo 'rhel' para el rol jpaybar.Common
 # Sobrescriben los valores por defecto de defaults/main.yml
 # Este fichero va a Git — no incluir credenciales aquí
-# Las credenciales van en group_vars/rhel/vault.yml cifrado con ansible-vault
+# Las credenciales van en group_vars/rhel/common_vault.yml cifrado con ansible-vault
 
 # =============================================================================
 # repos.yml
@@ -13,10 +13,10 @@
 # - Si las VMs se crean con el script create_rhel_target_vms.sh
 #   el registro se hace automáticamente via cloud-init — dejar en false
 # - Si se aplica el rol a servidores existentes (físicos, VMs sin script)
-#   cambiar a true y configurar las credenciales en vault.yml
+#   cambiar a true y configurar las credenciales en common_vault.yml
 common_rhsm_enabled: false
 
-# Descomentar cuando vault.yml esté cifrado y configurado
+# Descomentar cuando common_vault.yml esté cifrado y configurado
 # common_rhsm_username: "{{ vault_rhsm_username }}"
 # common_rhsm_password: "{{ vault_rhsm_password }}"
 

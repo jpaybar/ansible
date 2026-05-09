@@ -1,0 +1,39 @@
+---
+# Permisos de ficheros críticos del sistema
+
+- name: Ajustar permisos de archivos sensibles
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: '/etc/passwd', mode: "{{ hardening_passwd_mode }}" }
+    - { path: '/etc/shadow', mode: "{{ hardening_shadow_mode }}" }
+    - { path: '/etc/group',  mode: "{{ hardening_group_mode }}" }
+
+- name: Crear /etc/cron.allow con usuarios autorizados
+  ansible.builtin.copy:
+    dest: /etc/cron.allow
+    content: "{{ hardening_cron_allow_users | join('\n') }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Eliminar /etc/cron.deny
+  ansible.builtin.file:
+    path: /etc/cron.deny
+    state: absent
+
+- name: Crear /etc/at.allow con usuarios autorizados
+  ansible.builtin.copy:
+    dest: /etc/at.allow
+    content: "{{ hardening_at_allow_users | join('\n') }}\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Eliminar /etc/at.deny
+  ansible.builtin.file:
+    path: /etc/at.deny
+    state: absent

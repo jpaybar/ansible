@@ -1,0 +1,11 @@
+---
+# Parámetros del kernel para hardening básico
+
+- name: Aplicar parámetros sysctl de hardening
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-hardening.conf
+  loop: "{{ hardening_sysctl_params | dict2items }}"

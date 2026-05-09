@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT-0
+---
+# handlers file for jpaybar.Hardening
+
+- name: restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+  when: not ansible_check_mode
+
+- name: reload firewalld
+  ansible.builtin.command: firewall-cmd --reload
+  when: not ansible_check_mode
+  changed_when: true
+
+- name: apply crypto policy
+  ansible.builtin.command: update-crypto-policies --set {{ crypto_policy }}
+  when: not ansible_check_mode
+  changed_when: true

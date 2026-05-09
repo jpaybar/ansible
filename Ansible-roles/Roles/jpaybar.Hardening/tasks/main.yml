@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for jpaybar.Hardening
+
+- name: Cargar variables específicas de versión RHEL
+  ansible.builtin.include_vars: "rhel{{ ansible_distribution_major_version }}.yml"
+  tags: always
+
+- name: Gestión de paquetes y crypto-policy
+  ansible.builtin.import_tasks: packages.yml
+  when: hardening_enable_packages | default(true)
+  tags: packages
+
+- name: Parámetros del kernel (sysctl)
+  ansible.builtin.import_tasks: sysctl.yml
+  when: hardening_enable_sysctl | default(true)
+  tags: sysctl
+
+- name: Deshabilitar servicios inseguros
+  ansible.builtin.import_tasks: services.yml
+  when: hardening_enable_services | default(true)
+  tags: services
+
+- name: Configuración de firewalld
+  ansible.builtin.import_tasks: firewalld.yml
+  when: hardening_enable_firewall | default(true)
+  tags: firewall
+
+- name: Políticas de autenticación y contraseñas
+  ansible.builtin.import_tasks: auth.yml
+  when: hardening_enable_auth | default(true)
+  tags: auth
+
+- name: Endurecimiento SSH
+  ansible.builtin.import_tasks: ssh.yml
+  when: hardening_enable_ssh | default(true)
+  tags: ssh
+
+- name: Permisos de ficheros críticos
+  ansible.builtin.import_tasks: permissions.yml
+  when: hardening_enable_permissions | default(true)
+  tags: permissions
+
+- name: Configuración de sudo
+  ansible.builtin.import_tasks: sudo.yml
+  when: hardening_enable_sudo | default(true)
+  tags: sudo

@@ -3,4 +3,4 @@
 - hosts: webservers
   become: true
   roles:
-    - ../Roles/jpaybar.Apache2
+    - jpaybar.Apache2

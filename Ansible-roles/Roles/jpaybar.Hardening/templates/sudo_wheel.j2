@@ -1,0 +1,5 @@
+{% if hardening_sudo_wheel_nopasswd %}
+%wheel ALL=(ALL) NOPASSWD: ALL
+{% else %}
+%wheel ALL=(ALL) ALL
+{% endif %}

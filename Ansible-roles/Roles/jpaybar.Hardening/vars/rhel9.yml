@@ -1,0 +1,5 @@
+---
+# Variables específicas para RHEL 9
+# RHEL 9 ya eliminó la mayoría de paquetes inseguros; xinetd aún podría estar.
+bad_packages:
+  - xinetd

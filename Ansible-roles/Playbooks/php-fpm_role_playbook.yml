@@ -3,4 +3,4 @@
 - hosts: webservers
   become: true
   roles:
-    - ../Roles/jpaybar.Php-fpm
+    - jpaybar.Php-fpm

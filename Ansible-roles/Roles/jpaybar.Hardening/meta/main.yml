@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: MIT-0
+---
+galaxy_info:
+  author: jpaybar
+  description: Hardening básico para RHEL 8 y RHEL 9 (SSH, PAM, sysctl, firewalld, permisos, sudo)
+  company: ""
+
+  license: MIT-0
+
+  min_ansible_version: "2.12"
+
+  platforms:
+    - name: EL
+      versions:
+        - 8
+        - 9
+
+  galaxy_tags:
+    - hardening
+    - security
+    - rhel
+    - sysadmin
+
+dependencies: []

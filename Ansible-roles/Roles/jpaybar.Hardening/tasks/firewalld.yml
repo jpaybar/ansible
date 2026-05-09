@@ -1,0 +1,123 @@
+---
+# Configuración de firewalld
+
+- name: Asegurar que firewalld está instalado (RHEL 8)
+  ansible.builtin.command:
+    cmd: "dnf install -y firewalld"
+  register: firewalld_install
+  changed_when: >
+    'Nothing to do' not in firewalld_install.stdout and
+    'Nada por hacer' not in firewalld_install.stdout
+  when: ansible_facts['distribution_major_version'] == '8'
+
+- name: Asegurar que firewalld está instalado (RHEL 9)
+  ansible.builtin.dnf:
+    name: firewalld
+    state: present
+  when: ansible_facts['distribution_major_version'] == '9'
+
+- name: Iniciar y habilitar firewalld
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Obtener zona por defecto actual
+  ansible.builtin.command: firewall-cmd --get-default-zone
+  register: current_zone
+  changed_when: false
+
+- name: Establecer zona por defecto
+  ansible.builtin.command: firewall-cmd --set-default-zone={{ hardening_firewalld_default_zone }}
+  register: set_zone
+  changed_when: true
+  when: current_zone.stdout.strip() != hardening_firewalld_default_zone
+  notify: reload firewalld
+
+- name: Obtener servicios actualmente habilitados en la zona
+  ansible.builtin.command: >
+    firewall-cmd --zone={{ hardening_firewalld_default_zone }} --list-services
+  register: current_services
+  changed_when: false
+  check_mode: false
+
+- name: Eliminar servicios no permitidos de la zona (RHEL 8)
+  ansible.builtin.command: >
+    firewall-cmd --zone={{ hardening_firewalld_default_zone }}
+    --remove-service={{ item }} --permanent
+  loop: "{{ current_services.stdout.split() }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '8'
+    - item not in hardening_firewalld_allowed_services
+  failed_when: false
+  notify: reload firewalld
+
+- name: Eliminar servicios no permitidos de la zona (RHEL 9)
+  ansible.builtin.firewalld:
+    zone: "{{ hardening_firewalld_default_zone }}"
+    service: "{{ item }}"
+    permanent: true
+    state: disabled
+  loop: "{{ current_services.stdout.split() }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '9'
+    - item not in hardening_firewalld_allowed_services
+  notify: reload firewalld
+
+- name: Abrir servicios permitidos en la zona (RHEL 8)
+  ansible.builtin.command: >
+    firewall-cmd --zone={{ hardening_firewalld_default_zone }}
+    --add-service={{ item }} --permanent
+  loop: "{{ hardening_firewalld_allowed_services }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '8'
+    - item not in current_services.stdout.split()
+  changed_when: true
+  notify: reload firewalld
+
+- name: Abrir servicios permitidos en la zona (RHEL 9)
+  ansible.builtin.firewalld:
+    zone: "{{ hardening_firewalld_default_zone }}"
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop: "{{ hardening_firewalld_allowed_services }}"
+  when: ansible_facts['distribution_major_version'] == '9'
+  notify: reload firewalld
+
+- name: Abrir puertos adicionales (RHEL 8)
+  ansible.builtin.command: >
+    firewall-cmd --zone={{ hardening_firewalld_default_zone }}
+    --add-port={{ item }} --permanent
+  loop: "{{ hardening_firewalld_extra_ports }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '8'
+    - hardening_firewalld_extra_ports | length > 0
+  notify: reload firewalld
+
+- name: Abrir puertos adicionales (RHEL 9)
+  ansible.builtin.firewalld:
+    zone: "{{ hardening_firewalld_default_zone }}"
+    port: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop: "{{ hardening_firewalld_extra_ports }}"
+  when:
+    - ansible_facts['distribution_major_version'] == '9'
+    - hardening_firewalld_extra_ports | length > 0
+  notify: reload firewalld
+
+- name: Obtener log-denied actual
+  ansible.builtin.command: firewall-cmd --get-log-denied
+  register: current_log_denied
+  changed_when: false
+
+- name: Configurar log-denied
+  ansible.builtin.command: >
+    firewall-cmd --set-log-denied={{ 'all' if hardening_firewalld_log_denied else 'off' }}
+  register: log_denied_result
+  changed_when: true
+  when: >
+    current_log_denied.stdout.strip() != ('all' if hardening_firewalld_log_denied else 'off')
+  notify: reload firewalld

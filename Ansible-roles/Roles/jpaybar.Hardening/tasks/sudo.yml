@@ -1,0 +1,26 @@
+---
+# Configuración de sudo
+
+- name: Asegurar que sudo está instalado (RHEL 8)
+  ansible.builtin.command:
+    cmd: "dnf install -y sudo"
+  register: sudo_install
+  changed_when: >
+    'Nothing to do' not in sudo_install.stdout and
+    'Nada por hacer' not in sudo_install.stdout
+  when: ansible_facts['distribution_major_version'] == '8'
+
+- name: Asegurar que sudo está instalado (RHEL 9)
+  ansible.builtin.dnf:
+    name: sudo
+    state: present
+  when: ansible_facts['distribution_major_version'] == '9'
+
+- name: Configurar sudo para el grupo wheel
+  ansible.builtin.template:
+    src: sudo_wheel.j2
+    dest: /etc/sudoers.d/00-wheel
+    validate: visudo -cf %s
+    owner: root
+    group: root
+    mode: '0440'

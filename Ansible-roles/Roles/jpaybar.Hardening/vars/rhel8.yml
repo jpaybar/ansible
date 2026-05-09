@@ -1,0 +1,11 @@
+---
+# Variables específicas para RHEL 8
+# Paquetes inseguros a eliminar (existen en RHEL 8)
+bad_packages:
+  - telnet-server
+  - rsh-server
+  - rsh
+  - talk-server
+  - talk
+  - ypserv
+  - xinetd          # con precaución, ver tasks/packages.yaml

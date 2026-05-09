@@ -1,0 +1,46 @@
+# group_vars/rhel/hardening.yml
+# Variables del rol jpaybar.Hardening para el grupo rhel.
+# Solo se declaran las variables que sobreescriben defaults/main.yml.
+# El resto de parámetros toman el valor por defecto definido en el rol.
+---
+
+# ─── SSH ──────────────────────────────────────────────────────────────────────
+# Acceso solo por clave pública, sin contraseña
+hardening_ssh_permit_root_login: "no"
+hardening_ssh_password_auth: "no"
+hardening_ssh_ports:
+  - 22
+
+# ─── Firewall ─────────────────────────────────────────────────────────────────
+# Solo SSH abierto en el lab
+hardening_firewalld_default_zone: public
+hardening_firewalld_allowed_services:
+  - ssh
+hardening_firewalld_extra_ports: []
+hardening_firewalld_log_denied: false
+
+# ─── Kernel (sysctl) ──────────────────────────────────────────────────────────
+# VMs de lab, no actúan como router
+hardening_sysctl_params:
+  net.ipv4.ip_forward: 0
+  net.ipv6.conf.all.forwarding: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.default.rp_filter: 1
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  net.ipv4.icmp_ignore_bogus_error_responses: 1
+  net.ipv4.tcp_syncookies: 1
+
+# ─── Contraseñas y cuentas (PAM) ──────────────────────────────────────────────
+hardening_pwquality_minlen: 12
+hardening_faillock_deny: 5
+hardening_faillock_unlock_time: 900
+
+# ─── Sudo ─────────────────────────────────────────────────────────────────────
+# En el lab wheel sin NOPASSWD (cloud-user ya tiene sudo configurado por Common)
+hardening_sudo_wheel_nopasswd: false
+
+# ─── Cron / at ────────────────────────────────────────────────────────────────
+hardening_cron_allow_users:
+  - root
+hardening_at_allow_users:
+  - root

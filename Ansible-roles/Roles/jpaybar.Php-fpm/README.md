@@ -61,7 +61,7 @@ This is the playbook:
 - hosts: all
   become: true
   roles:
-    - ../Roles/jpaybar.Php-fpm
+    - jpaybar.Php-fpm
 ```
 
 But you can customize the playbook on your own way, as well as the inventory to your needs.

@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: MIT-0
+---
+# defaults file for jpaybar.Hardening
+
+# ─── Habilitar/deshabilitar secciones ─────────────────────────────────────────
+hardening_enable_packages: true
+hardening_enable_ssh: true
+hardening_enable_auth: true
+hardening_enable_sysctl: true
+hardening_enable_services: true
+hardening_enable_firewall: true
+hardening_enable_permissions: true
+hardening_enable_sudo: true
+
+# ─── SSH ──────────────────────────────────────────────────────────────────────
+hardening_ssh_permit_root_login: "no"
+hardening_ssh_password_auth: "no"           # usar "yes" si aún necesitas contraseñas
+hardening_ssh_ports:
+  - 22
+hardening_ssh_client_alive_interval: 300
+hardening_ssh_client_alive_count_max: 0
+hardening_ssh_max_auth_tries: 4
+hardening_ssh_banner: "/etc/issue.net"
+
+# ─── Contraseñas y cuentas (PAM) ──────────────────────────────────────────────
+hardening_pwquality_minlen: 12
+hardening_pwquality_dcredit: -1
+hardening_pwquality_ucredit: -1
+hardening_pwquality_lcredit: -1
+hardening_pwquality_ocredit: -1
+hardening_pwquality_maxrepeat: 3
+hardening_faillock_deny: 5
+hardening_faillock_unlock_time: 900         # segundos (15 min)
+
+# ─── Kernel (sysctl) ──────────────────────────────────────────────────────────
+hardening_sysctl_params:
+  # Deshabilitar reenvío de paquetes (salvo que sea router)
+  net.ipv4.ip_forward: 0
+  net.ipv6.conf.all.forwarding: 0
+  # Proteger contra IP spoofing
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.default.rp_filter: 1
+  # Ignorar broadcast ICMP y paquetes maliciosos
+  net.ipv4.icmp_echo_ignore_broadcasts: 1
+  net.ipv4.icmp_ignore_bogus_error_responses: 1
+  # Proteger contra ataques SYN
+  net.ipv4.tcp_syncookies: 1
+
+# ─── Firewall ─────────────────────────────────────────────────────────────────
+hardening_firewalld_default_zone: public
+hardening_firewalld_allowed_services:
+  - ssh
+hardening_firewalld_extra_ports: []         # ej: ['8080/tcp']
+hardening_firewalld_log_denied: false
+
+# ─── Servicios inseguros a deshabilitar/enmascarar ────────────────────────────
+hardening_bad_services:
+  - telnet.socket
+  - rsh.socket
+  - rlogin.socket
+  - rexec.socket
+  - chargen-dgram
+  - chargen-stream
+  - discard-dgram
+  - discard-stream
+  - echo-dgram
+  - echo-stream
+
+# ─── Permisos de archivos críticos ────────────────────────────────────────────
+hardening_passwd_mode: '0644'
+hardening_shadow_mode: '0000'
+hardening_group_mode: '0644'
+
+# ─── Cron / at ────────────────────────────────────────────────────────────────
+hardening_cron_allow_users:
+  - root
+hardening_at_allow_users:
+  - root
+
+# ─── Sudo ─────────────────────────────────────────────────────────────────────
+hardening_sudo_wheel_nopasswd: false
+
+# ─── Cuentas de sistema: UID mínimo excluido del hardening de shell ───────────
+# No se tocará el shell de cuentas con UID < este valor (protege root y daemons)
+hardening_system_account_uid_min: 100

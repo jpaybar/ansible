@@ -1,0 +1,19 @@
+---
+# hardening.yml — Playbook para el rol jpaybar.Hardening
+# Aplica hardening base a todos los servidores RHEL del grupo 'rhel'
+#
+# Uso:
+#   ansible-playbook hardening.yml -i Inventories/kvm/hosts.yml
+#   ansible-playbook hardening.yml -i Inventories/kvm/hosts.yml --limit rhel8
+#   ansible-playbook hardening.yml -i Inventories/kvm/hosts.yml --tags ssh,sudo
+#
+# Variables:
+#   Sobrescribir los defaults del rol en Inventories/kvm/group_vars/rhel.yml
+
+- name: Hardening base de servidores RHEL
+  hosts: rhel
+  become: true
+  gather_facts: true
+
+  roles:
+    - jpaybar.Hardening

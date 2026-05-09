@@ -1,0 +1,11 @@
+---
+# Deshabilitar y enmascarar servicios inseguros conocidos
+
+- name: Deshabilitar y enmascarar servicios inseguros
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+    masked: true
+  loop: "{{ hardening_bad_services }}"
+  failed_when: false   # no falla si el servicio no existe (RHEL 9)

@@ -72,13 +72,13 @@ Referencia: [ansible/ansible#86432](https://github.com/ansible/ansible/pull/8643
 
 ## Variables
 
-Todas las variables tienen valores por defecto en `defaults/main.yml`. Sobrescríbelas en `group_vars/rhel/vars.yml` para aplicarlas a todo el grupo, en `host_vars/<hostname>.yml` para un host específico, o directamente en el playbook si solo aplica a una ejecución concreta.
+Todas las variables tienen valores por defecto en `defaults/main.yml`. Sobrescríbelas en `group_vars/rhel/common.yml` para aplicarlas a todo el grupo, en `host_vars/<hostname>.yml` para un host específico, o directamente en el playbook si solo aplica a una ejecución concreta.
 
 ```bash
 group_vars/
 └── rhel/
-├── vars.yml ← variables para todo el grupo rhel
-└── vault.yml ← credenciales cifradas con ansible-vault
+├── common.yml ← variables para todo el grupo rhel
+└── common_vault.yml ← credenciales cifradas con ansible-vault
 
 host_vars/
 ├── rhel8.yml ← variables específicas de rhel8
@@ -261,21 +261,21 @@ ansible-playbook Playbooks/common.yml -i Inventories/kvm/hosts.yml --tags users,
 
 La estructura para vault ya está preparada en `group_vars/rhel/`:
 
-1. Editar `group_vars/rhel/vault.yml` y sustituir los comentarios por las credenciales reales:
+1. Editar `group_vars/rhel/common_vault.yml` y sustituir los comentarios por las credenciales reales:
 
 ```yaml
 vault_rhsm_username: "tu_usuario@redhat.com"
 vault_rhsm_password: "tu_password"
 ```
 
-2. Descomentar en `group_vars/rhel/vars.yml` las referencias al vault:
+2. Descomentar en `group_vars/rhel/common.yml` las referencias al vault:
 
 ```yaml
 common_rhsm_username: "{{ vault_rhsm_username }}"
 common_rhsm_password: "{{ vault_rhsm_password }}"
 ```
 
-3. Habilitar el registro en `group_vars/rhel/vars.yml`:
+3. Habilitar el registro en `group_vars/rhel/common.yml`:
 
 ```yaml
 common_rhsm_enabled: true
@@ -284,15 +284,15 @@ common_rhsm_enabled: true
 4. Cifrar el fichero vault:
 
 ```bash
-ansible-vault encrypt group_vars/rhel/vault.yml
+ansible-vault encrypt group_vars/rhel/common_vault.yml
 
 
 
 # Ver el contenido del fichero cifrado
-ansible-vault view group_vars/rhel/vault.yml
+ansible-vault view group_vars/rhel/common_vault.yml
 
 # Editar el fichero cifrado
-ansible-vault edit group_vars/rhel/vault.yml
+ansible-vault edit group_vars/rhel/common_vault.yml
 ```
 
 5. Lanzar con vault:

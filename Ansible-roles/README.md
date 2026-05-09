@@ -12,6 +12,7 @@ Collection of Ansible roles for managing, configuring and deploying infrastructu
 | Role                                                       | Description                                                                   | OS                             | Status |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------ | ------ |
 | [jpaybar.Common](Roles/jpaybar.Common/README.md)           | Base server configuration: repos, packages, NTP, SELinux, users, sudoers, NFS | RHEL 8/9                       | ✅      |
+| [jpaybar.Hardening](Roles/jpaybar.Hardening/README.md)     | Base hardening: SSH, PAM, sysctl, firewalld, permissions, sudo                | RHEL 8/9                       | ✅      |
 | [jpaybar.Apache2](Roles/jpaybar.Apache2/README.md)         | Apache2 web server                                                            | Ubuntu 18.04/20.04/22.04/24.04 | ✅      |
 | [jpaybar.Mysql](Roles/jpaybar.Mysql/README.md)             | MySQL database                                                                | Ubuntu 18.04/20.04/22.04/24.04 | ✅      |
 | [jpaybar.Nginx_Proxy](Roles/jpaybar.Nginx_Proxy/README.md) | Nginx reverse proxy with SSL                                                  | Ubuntu 18.04/20.04/22.04/24.04 | ✅      |
@@ -39,7 +40,10 @@ Ansible-roles/
 │   │   ├── group_vars/
 │   │   │   ├── dbservers.yml
 │   │   │   ├── proxy.yml
-│   │   │   ├── rhel/          # RHEL group variables (vars.yml + vault.yml)
+│   │   │   ├── rhel/          # RHEL group variables (common.yml + common_vault.yml)
+│   │   │   │   ├── common.yml
+│   │   │   │   ├── common_vault.yml
+│   │   │   │   └── hardening.yml
 │   │   │   ├── webservers.yml
 │   │   │   └── wordpress.yml
 │   │   └── hosts.yml
@@ -52,6 +56,7 @@ Ansible-roles/
 │       └── openstack.yml
 ├── Playbooks/
 │   ├── common.yml              # jpaybar.Common role — RHEL base configuration
+│   ├── hardening.yml           # jpaybar.Hardening role — RHEL base hardening
 │   ├── site.yml                # Full WordPress stack
 │   ├── apache_role_playbook.yml
 │   ├── mysql_role_playbook.yml
@@ -60,19 +65,20 @@ Ansible-roles/
 │   └── wordpress_role_playbook.yml
 ├── Roles/
 │   ├── jpaybar.Common/
+│   ├── jpaybar.Hardening/
 │   ├── jpaybar.Apache2/
 │   ├── jpaybar.Mysql/
 │   ├── jpaybar.Nginx_Proxy/
 │   ├── jpaybar.Php-fpm/
 │   └── jpaybar.Wordpress/
-├── README.md
-├── README_es.md
 ├── ansible.cfg
 ├── ansible_provision.sh
+├── create_rhel_target_vms.sh   # RHEL target VMs provisioning script
 ├── LICENSE
-├── README_WordPress_es.md
+├── README.md
+├── README_es.md
 ├── README_WordPress.md
-└── create_rhel_target_vms.sh   # RHEL target VMs provisioning script
+└── README_WordPress_es.md
 ```
 
 ---

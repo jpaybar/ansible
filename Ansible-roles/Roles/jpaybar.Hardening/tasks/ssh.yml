@@ -1,0 +1,36 @@
+---
+# Endurecimiento SSH
+
+- name: Desplegar banner SSH
+  ansible.builtin.template:
+    src: sshd_banner.j2
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configurar parámetros SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^{{ item.key }}\\s"
+    line: "{{ item.key }} {{ item.value }}"
+    validate: sshd -t -f %s
+  loop:
+    - { key: 'PermitRootLogin',      value: "{{ hardening_ssh_permit_root_login }}" }
+    - { key: 'PasswordAuthentication', value: "{{ hardening_ssh_password_auth }}" }
+    - { key: 'X11Forwarding',        value: 'no' }
+    - { key: 'Banner',               value: "{{ hardening_ssh_banner }}" }
+    - { key: 'ClientAliveInterval',  value: "{{ hardening_ssh_client_alive_interval }}" }
+    - { key: 'ClientAliveCountMax',  value: "{{ hardening_ssh_client_alive_count_max }}" }
+    - { key: 'MaxAuthTries',         value: "{{ hardening_ssh_max_auth_tries }}" }
+  notify: restart sshd
+
+- name: Configurar puertos SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^Port {{ item }}$"
+    line: "Port {{ item }}"
+    validate: sshd -t -f %s
+  loop: "{{ hardening_ssh_ports }}"
+  when: hardening_ssh_ports is defined
+  notify: restart sshd

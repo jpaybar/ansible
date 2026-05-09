@@ -159,23 +159,23 @@ Cada rol soporta múltiples versiones de Ubuntu (18.04, 20.04, 22.04, 24.04) med
 - hosts: dbservers
   become: true
   roles:
-    - ../Roles/jpaybar.Mysql
+    - jpaybar.Mysql
 
 - hosts: webservers
   become: true
   roles:
-    - ../Roles/jpaybar.Apache2
-    - ../Roles/jpaybar.Php-fpm
+    - jpaybar.Apache2
+    - jpaybar.Php-fpm
 
 - hosts: wordpress
   become: true
   roles:
-    - ../Roles/jpaybar.Wordpress
+    - jpaybar.Wordpress
 
 - hosts: proxy
   become: true
   roles:
-    - ../Roles/jpaybar.Nginx_Proxy
+    - jpaybar.Nginx_Proxy
 ```
 
 El orden de despliegue es intencional: primero la base de datos, luego el servidor web y PHP, después WordPress (que necesita la base de datos ya configurada), y finalmente el proxy (que necesita conocer la IP de server2). Los grupos `dbservers`, `webservers`, `wordpress` y `proxy` coinciden exactamente con los grupos generados por el inventario dinámico a partir de los metadatos de Terraform.

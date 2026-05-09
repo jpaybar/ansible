@@ -3,20 +3,20 @@
 - hosts: dbservers
   become: true
   roles:
-    - ../Roles/jpaybar.Mysql
+    - jpaybar.Mysql
 
 - hosts: webservers
   become: true
   roles:
-    - ../Roles/jpaybar.Apache2
-    - ../Roles/jpaybar.Php-fpm
+    - jpaybar.Apache2
+    - jpaybar.Php-fpm
 
 - hosts: wordpress
   become: true
   roles:
-    - ../Roles/jpaybar.Wordpress
+    - jpaybar.Wordpress
 
 - hosts: proxy
   become: true
   roles:
-    - ../Roles/jpaybar.Nginx_Proxy
+    - jpaybar.Nginx_Proxy

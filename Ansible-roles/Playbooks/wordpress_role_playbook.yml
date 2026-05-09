@@ -3,4 +3,4 @@
 - hosts: wordpress
   become: true
   roles:
-    - ../Roles/jpaybar.Wordpress
+    - jpaybar.Wordpress

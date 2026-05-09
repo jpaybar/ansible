@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT-0
+---
+# vars file for jpaybar.Hardening
+# Variables internas no configurables por el usuario
+
+crypto_policy: DEFAULT
+authselect_profile: sssd

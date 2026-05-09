@@ -1,0 +1,73 @@
+---
+# Políticas de autenticación, contraseñas y cuentas
+
+- name: Comprobar perfil authselect activo
+  ansible.builtin.command: authselect current --raw
+  register: authselect_current
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Configurar authselect con faillock y pwquality
+  ansible.builtin.command: >
+    authselect select {{ authselect_profile }}
+    with-faillock
+    --force
+  when: authselect_profile not in (authselect_current.stdout | default(''))
+  changed_when: true
+
+- name: Ajustar parámetros de envejecimiento de contraseñas en login.defs
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: "^{{ item.key }}\\s"
+    line: "{{ item.key }} {{ item.value }}"
+    backrefs: false
+  loop:
+    - { key: 'PASS_MAX_DAYS', value: '90' }
+    - { key: 'PASS_MIN_DAYS', value: '1' }
+    - { key: 'PASS_WARN_AGE', value: '7' }
+
+- name: Configurar faillock.conf (bloqueo de cuenta)
+  ansible.builtin.lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: "^{{ item.key }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+    create: true
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - { key: 'deny',         value: "{{ hardening_faillock_deny }}" }
+    - { key: 'unlock_time',  value: "{{ hardening_faillock_unlock_time }}" }
+
+- name: Configurar pwquality.conf (calidad de contraseñas)
+  ansible.builtin.lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: "^{{ item.key }}\\s*="
+    line: "{{ item.key }} = {{ item.value }}"
+    create: true
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - { key: 'minlen',     value: "{{ hardening_pwquality_minlen }}" }
+    - { key: 'dcredit',    value: "{{ hardening_pwquality_dcredit }}" }
+    - { key: 'ucredit',    value: "{{ hardening_pwquality_ucredit }}" }
+    - { key: 'lcredit',    value: "{{ hardening_pwquality_lcredit }}" }
+    - { key: 'ocredit',    value: "{{ hardening_pwquality_ocredit }}" }
+    - { key: 'maxrepeat',  value: "{{ hardening_pwquality_maxrepeat }}" }
+
+- name: Obtener cuentas de sistema con shell interactivo y UID >= hardening_system_account_uid_min
+  ansible.builtin.shell: |
+    awk -F: '$3 >= {{ hardening_system_account_uid_min }} && $3 < 1000 && \
+    $7 != "/sbin/nologin" && $7 != "/bin/false" && $7 != "" {print $1}' /etc/passwd
+  register: sys_accounts_interactive
+  changed_when: false
+  check_mode: false
+
+- name: Establecer shell nologin para cuentas de sistema con shell interactivo
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /sbin/nologin
+  loop: "{{ sys_accounts_interactive.stdout_lines }}"
+  when: sys_accounts_interactive.stdout_lines | length > 0
