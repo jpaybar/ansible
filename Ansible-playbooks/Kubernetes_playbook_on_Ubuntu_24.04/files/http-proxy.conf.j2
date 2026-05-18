@@ -1,0 +1,7 @@
+# /etc/systemd/system/containerd.service.d/http-proxy.conf
+# Managed by Ansible — do not edit manually
+# Applied only when proxy_enabled: true in vars/variables.yml
+[Service]
+Environment="HTTP_PROXY={{ http_proxy }}"
+Environment="HTTPS_PROXY={{ https_proxy }}"
+Environment="NO_PROXY={{ no_proxy }}"

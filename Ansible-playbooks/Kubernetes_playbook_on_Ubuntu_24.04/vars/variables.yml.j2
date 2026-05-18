@@ -1,0 +1,25 @@
+---
+#################################### PROXY SETTINGS ###############################################
+# Set proxy_enabled to true if you are behind a corporate proxy
+proxy_enabled: false
+http_proxy: "http://your-proxy-here:8080"
+https_proxy: "http://your-proxy-here:8080"
+no_proxy: "localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.39.0/24,192.168.49.0/24,192.168.0.0/16,172.30.240.0/20"
+
+#################################### CREATE KUBERNETES OPERATOR ###################################
+kubernetes_operator: "kubernetesop"
+copy_public_key: "{{ lookup('file', 'public_key/kubernetesop.pub') }}"
+
+#################################### KUBERNETES VERSION ###########################################
+# Minor version used for repository URL (e.g. 1.32)
+kubernetes_minor_version: "${K8S_MINOR_VERSION}"
+# Full package version including revision suffix (e.g. 1.32.4-1.1)
+kubernetes_version: "${K8S_VERSION}"
+
+#################################### CONFIGURE KUBERNETES CLUSTER #################################
+pod_network_ip: "10.10.0.0/16"
+controller_node_ip: "${CONTROLLER_NODE_IP}"
+pod_network_cni: "https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/calico.yaml"
+
+#################################### METALLB ######################################################
+metallb_ip_range: "192.168.122.201-192.168.122.210"

@@ -1,0 +1,23 @@
+##########################################################################
+# Inventario generado automáticamente por deploy-k8s-lab.sh
+# No editar manualmente
+##########################################################################
+
+all:
+  children:
+    kubernetes_cluster:
+      vars:
+        ansible_python_interpreter: "/usr/bin/python3"
+        ansible_user: ubuntu
+        ansible_ssh_private_key_file: /home/juanma/.ssh/id_rsa
+      children:
+        controllers:
+          hosts:
+            k8smaster1:
+              ansible_host: 192.168.122.110
+        nodes:
+          hosts:
+            k8sworker1:
+              ansible_host: 192.168.122.111
+            k8sworker2:
+              ansible_host: 192.168.122.112

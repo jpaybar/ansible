@@ -1,0 +1,479 @@
+###############################################################################
+# Playbook: Install Kubernetes cluster with kubeadm on Ubuntu 24.04
+# Kubernetes version: 1.32.x
+# Container runtime: containerd (standalone, no Docker)
+# CNI: Calico v3.29.1
+#
+# Usage:
+#   ansible-playbook -i inventory_hosts.yml install_kubernetes.yml
+#
+# To enable proxy support set proxy_enabled: true in vars/variables.yml
+#
+# Tags disponibles para diagnóstico:
+#   operator    - Creación de usuario kubernetesop
+#   kernel      - Swap, módulos kernel, sysctl
+#   containerd  - Instalación y configuración de containerd
+#   kubetools   - Instalación de kubelet, kubeadm, kubectl
+#   init        - kubeadm init, CNI Calico, kubeconfig
+#   join        - Join de workers al clúster
+###############################################################################
+---
+
+################################################################################
+# PLAY 1 — All nodes: base setup, containerd, kubeadm/kubelet/kubectl
+################################################################################
+- hosts: all
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+
+    #################################### CREATE KUBERNETES OPERATOR ####################################
+    - name: Create the account "{{ kubernetes_operator }}"
+      user:
+        name: "{{ kubernetes_operator }}"
+        createhome: yes
+        shell: /bin/bash
+        state: present
+      tags: operator
+
+    - name: Create sudoers entry file for "{{ kubernetes_operator }}"
+      file:
+        path: "/etc/sudoers.d/{{ kubernetes_operator }}"
+        state: touch
+        mode: '0440'
+      tags: operator
+
+    - name: Set up passwordless sudo for "{{ kubernetes_operator }}"
+      lineinfile:
+        dest: "/etc/sudoers.d/{{ kubernetes_operator }}"
+        line: '{{ kubernetes_operator }}  ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+      tags: operator
+
+    - name: Copy public key to authorized_keys for "{{ kubernetes_operator }}"
+      authorized_key:
+        user: "{{ kubernetes_operator }}"
+        state: present
+        key: "{{ copy_public_key }}"
+      tags: operator
+
+    - name: Print account information
+      command: id "{{ kubernetes_operator }}"
+      register: new_user_created
+      tags: operator
+
+    - debug:
+        msg: "{{ new_user_created.stdout_lines[0] }}"
+      tags: operator
+
+    #################################### KERNEL PREREQUISITES #########################################
+    - name: Disable swap (runtime)
+      command: swapoff -a
+      tags: kernel
+
+    - name: Disable swap in /etc/fstab (persistent)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+      tags: kernel
+
+    - name: Load required kernel modules (runtime)
+      modprobe:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - overlay
+        - br_netfilter
+      tags: kernel
+
+    - name: Persist kernel modules across reboots
+      copy:
+        dest: /etc/modules-load.d/kubernetes.conf
+        content: |
+          overlay
+          br_netfilter
+      tags: kernel
+
+    - name: Apply sysctl settings for Kubernetes networking
+      template:
+        src: files/kubernetes.conf.j2
+        dest: /etc/sysctl.d/kubernetes.conf
+        mode: '0644'
+      tags: kernel
+
+    - name: Reload sysctl to apply changes
+      command: sysctl --system
+      tags: kernel
+
+    #################################### INSTALL CONTAINERD ############################################
+    - name: Install required packages for containerd setup
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - software-properties-common
+        state: present
+        update_cache: yes
+      tags: containerd
+
+    - name: Create /etc/apt/keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      tags: containerd
+
+    - name: Add Docker GPG key (for containerd package)
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+      tags: containerd
+
+    - name: Get Ubuntu codename
+      command: lsb_release -cs
+      register: ubuntu_codename
+      changed_when: false
+      tags: containerd
+
+    - name: Add Docker repository (containerd source)
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
+        state: present
+        filename: docker
+      tags: containerd
+
+    - name: Install containerd.io
+      apt:
+        name: containerd.io
+        state: present
+        update_cache: yes
+      tags: containerd
+
+    - name: Create containerd config directory
+      file:
+        path: /etc/containerd
+        state: directory
+      tags: containerd
+
+    - name: Generate default containerd config
+      shell: containerd config default > /etc/containerd/config.toml
+      tags: containerd
+
+    - name: Configure containerd to use systemd cgroup driver
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+      notify: Restart containerd
+      tags: containerd
+
+    #================================ PROXY FOR CONTAINERD (OPTIONAL) ================================
+    - name: Create containerd service override directory
+      file:
+        path: /etc/systemd/system/containerd.service.d
+        state: directory
+      when: proxy_enabled
+      tags: containerd
+
+    - name: Set up proxy for containerd service
+      template:
+        src: files/http-proxy.conf.j2
+        dest: /etc/systemd/system/containerd.service.d/http-proxy.conf
+      when: proxy_enabled
+      notify: Restart containerd
+      tags: containerd
+    #=================================================================================================
+
+    - name: Enable and start containerd
+      systemd:
+        name: containerd
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      tags: containerd
+
+    #################################### INSTALL KUBERNETES TOOLS ######################################
+    - name: Add Kubernetes GPG key
+      get_url:
+        url: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor_version }}/deb/Release.key"
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
+      tags: kubetools
+
+    - name: Add Kubernetes repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor_version }}/deb/ /"
+        state: present
+        filename: kubernetes
+      tags: kubetools
+
+    - name: Esperar a que apt esté disponible
+      shell: |
+        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+          sleep 5
+        done
+      timeout: 300
+      tags: kubetools
+
+    - name: Install kubelet, kubeadm and kubectl
+      apt:
+        name:
+          - "kubelet={{ kubernetes_version }}"
+          - "kubeadm={{ kubernetes_version }}"
+          - "kubectl={{ kubernetes_version }}"
+        state: present
+        update_cache: yes
+      tags: kubetools
+
+    - name: Hold kubelet, kubeadm and kubectl at current version
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+      tags: kubetools
+
+    - name: Enable kubelet service
+      service:
+        name: kubelet
+        enabled: yes
+      tags: kubetools
+
+  handlers:
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        daemon_reload: yes
+
+################################################################################
+# PLAY 2 — Controller: kubeadm init, CNI, copy kubeconfig
+################################################################################
+- hosts: controllers
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+
+    - name: Esperar estabilización de servicios antes del init
+      pause:
+        seconds: 30
+
+    #################################### INITIALIZE THE CLUSTER ########################################
+    - name: Check if cluster already initialized
+      stat:
+        path: /etc/kubernetes/manifests/kube-apiserver.yaml
+      register: kubeadm_init_check
+      tags: init
+
+    - name: Initialize Kubernetes cluster
+      command: >
+        kubeadm init
+        --pod-network-cidr="{{ pod_network_ip }}"
+        --apiserver-advertise-address="{{ controller_node_ip }}"
+      when: not kubeadm_init_check.stat.exists
+      tags: init
+
+    - pause:
+        seconds: 30
+      tags: init
+
+    - name: Create .kube directory for "{{ kubernetes_operator }}"
+      file:
+        path: "/home/{{ kubernetes_operator }}/.kube"
+        state: directory
+        mode: '0755'
+        owner: "{{ kubernetes_operator }}"
+        group: "{{ kubernetes_operator }}"
+      tags: init
+
+    - name: Copy admin.conf to "{{ kubernetes_operator }}" kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ kubernetes_operator }}/.kube/config"
+        remote_src: yes
+        owner: "{{ kubernetes_operator }}"
+        group: "{{ kubernetes_operator }}"
+        mode: '0600'
+      tags: init
+
+    - name: Set kubeconfig readable by ubuntu user
+      file:
+        path: "/home/{{ kubernetes_operator }}/.kube/config"
+        mode: '0644'
+      tags: init
+
+    - name: Install Calico CNI
+      command: kubectl apply -f "{{ pod_network_cni }}"
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Patch Calico CIDR to match pod network
+      command: >
+        kubectl set env daemonset/calico-node -n kube-system
+        CALICO_IPV4POOL_CIDR="{{ pod_network_ip }}"
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - pause:
+        seconds: 30
+      tags: init
+
+    #################################### JOIN WORKERS TO CLUSTER #######################################
+    - name: Get join command for worker nodes
+      command: kubeadm token create --print-join-command
+      register: kubernetes_join_command
+      tags: init
+
+    - debug:
+        msg: "{{ kubernetes_join_command.stdout }}"
+      tags: init
+
+    - name: Save join command to local temp file
+      become: false
+      local_action: copy content="{{ kubernetes_join_command.stdout_lines[0] }}" dest=/tmp/kubernetes_join_command mode='0600'
+      tags: init
+
+    - name: Copy kubeconfig to host
+      fetch:
+        src: /home/{{ kubernetes_operator }}/.kube/config
+        dest: ~/.kube/config
+        flat: yes
+      when: copy_kubeconfig_to_host | bool
+
+################################################################################
+# PLAY 3 — Workers: copy join command and join the cluster
+################################################################################
+- hosts: nodes
+  become: yes
+  tasks:
+
+    - name: Copy join command to worker nodes
+      copy:
+        src: /tmp/kubernetes_join_command
+        dest: /tmp/kubernetes_join_command
+        mode: '0700'
+      tags: join
+
+    - name: Check if node already joined
+      stat:
+        path: /etc/kubernetes/kubelet.conf
+      register: kubelet_conf_check
+      tags: join
+
+    - name: Join worker nodes to the cluster
+      command: sh /tmp/kubernetes_join_command
+      register: joined_or_not
+      when: not kubelet_conf_check.stat.exists
+      tags: join
+
+    - debug:
+        msg: "{{ joined_or_not.stdout }}"
+      when: not kubelet_conf_check.stat.exists
+      tags: join
+
+    - name: Remove join command from worker nodes (cleanup)
+      file:
+        path: /tmp/kubernetes_join_command
+        state: absent
+      tags: join
+
+################################################################################
+# PLAY 4 — Controller: post-join cluster components
+################################################################################
+- hosts: controllers
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+
+    - name: Install local-path-provisioner
+      command: kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Set local-path as default StorageClass
+      command: kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Install nginx-ingress-controller
+      command: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Install cert-manager
+      command: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Wait for cert-manager to be ready
+      command: kubectl wait deployment cert-manager -n cert-manager --for=condition=Available --timeout=120s
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+################################################################################
+# PLAY 5 — Controller: MetalLB LoadBalancer
+################################################################################
+- hosts: controllers
+  become: yes
+  vars_files:
+    - vars/variables.yml
+  tasks:
+
+    - name: Install MetalLB
+      command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Wait for MetalLB controller to be ready
+      command: kubectl wait deployment controller -n metallb-system --for=condition=Available --timeout=120s
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Apply MetalLB IPAddressPool and L2Advertisement
+      shell: |
+        kubectl apply -f - <<EOF
+        apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata:
+          name: lab-pool
+          namespace: metallb-system
+        spec:
+          addresses:
+          - "{{ metallb_ip_range }}"
+        ---
+        apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata:
+          name: lab-l2
+          namespace: metallb-system
+        spec:
+          ipAddressPools:
+          - lab-pool
+        EOF
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
+
+    - name: Patch ingress-nginx-controller to LoadBalancer
+      command: kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{"spec":{"type":"LoadBalancer"}}'
+      environment:
+        KUBECONFIG: /home/{{ kubernetes_operator }}/.kube/config
+      tags: init
